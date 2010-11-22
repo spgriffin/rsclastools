@@ -1,0 +1,15 @@
+= RSC LAS Tools Modification History =
+
+== Version 1.2 - 22/11/2010 ==
+  * Implemented on-the-fly tiling for:
+    * generation of AGH LAS files
+    * ground filtering
+  * Minor syntax changes
+  * Source code added to SVN
+
+== Version 1.1 - 19/11/2010 ==
+  * Numerous bug fixes. It now actually works :-/
+  * Added function to recalculate LAS header fields
+
+== Version 1.0 - 18/10/2010 ==
+  * Added to Google Code for testing
