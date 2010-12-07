@@ -99,7 +99,7 @@ PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone
   if not keyword_set(sectors) then sectors=6
   if not keyword_set(smoothing) then smoothing=0
   if not keyword_set(hemisphere) then hemisphere='South'
-  if not keyword_set(proj) then proj=0
+  if not keyword_set(proj) then proj=''
   if not keyword_set(productType) then productType='Elevation'
   RSC_LAS_Tools_SysVar
   
@@ -181,7 +181,8 @@ PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone
     if (outFormat eq 'ENVI') then begin
       writeENVIhdr, outfile, zone, resolution, tileStruct.ulx, tileStruct.uly, ncols, nrows, proj, hemisphere, productType
     endif else begin
-      writegeotiff, outfile, tileStruct.ulx, tileStruct.uly, proj, outfile+'.tif', cell_size=resolution, /assocInput, ncols=ncols, nrows=nrows
+      writegeotiff, outfile, tileStruct.ulx, tileStruct.uly, proj, outfile+'.tif', cell_size=resolution, /assocInput, $
+        ncols=ncols, nrows=nrows, zone=zone
       file_delete, outfile, /quiet
     endelse
     

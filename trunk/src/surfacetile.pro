@@ -112,6 +112,35 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
   outputHeader.xMax = -10e6
   outputHeader.yMax = -10e6
   outputHeader.zMax = -10e6
+  outputHeader.nRecords = 0
+  case outputHeader.pointFormat of
+    0: begin
+      outputHeader.headerSize = 227US
+      outputHeader.dataOffset = 227UL
+    end
+    1: begin
+      outputHeader.headerSize = 227US
+      outputHeader.dataOffset = 227UL
+    end
+    2: begin
+      outputHeader.headerSize = 227US
+      outputHeader.dataOffset = 227UL
+    end
+    3: begin
+      outputHeader.headerSize = 227US
+      outputHeader.dataOffset = 227UL
+    end
+    4: begin
+      outputHeader.headerSize = 235US
+      outputHeader.dataOffset = 235UL
+      outputHeader.wdp = 0LL
+    end
+    5: begin
+      outputHeader.headerSize = 235US
+      outputHeader.dataOffset = 235UL
+      outputHeader.wdp = 0LL
+    end
+  endcase
   date = bin_date(systime(/utc))
   day = julday(date[1],date[2],date[0]) - julday(1,1,date[0]) + 1
   outputHeader.softwareID = byte('IDL ' + !version.release)
@@ -127,7 +156,7 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
     tileymin[i] = yDiv * dims[1] + floor(masterHeader.yMin)
     tileCol[i] = dims[0] + 1
     tileRow[i] = dims[1] + 1
-    WriteLAS, outputFiles[i], outputHeader, /nodata
+    WriteLAS, outputFiles[i], outputHeader, /nodata, pointFormat=outputHeader.pointFormat
   endfor
   
   ; Loop through each las file
@@ -151,7 +180,7 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
       upper = (lower + splitsize - 1UL) < (las_header.nPoints - 1UL)
       
       ; Read the chunk
-      nPoints = upper - lower + 1L
+      nPoints = upper - lower
       p_index = lindgen(nPoints) + lower
       tempDataStr = InitDataLAS(pointFormat=las_header.pointFormat)
       tempData = replicate(tempDataStr, nPoints)
@@ -180,12 +209,12 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
           temp_header.nPoints += n_elements(ri[ri[j]:ri[j+1L]-1L])
           nReturns = temp_header.nReturns
           temp_header.nReturns = histogram(reform([ishft(ishft(tempData[ri[ri[j]:ri[j+1L]-1L]].nReturn, 5), -5)]), min=1, max=5, input=nReturns)
-          temp_header.xMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].east) * outputHeader.xScale + outputHeader.xOffset) > temp_header.xMax
-          temp_header.yMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].north) * outputHeader.yScale + outputHeader.yOffset) > temp_header.yMax
-          temp_header.zMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].elev) * outputHeader.zScale + outputHeader.zOffset) > temp_header.zMax
-          temp_header.xMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].east) * outputHeader.xScale + outputHeader.xOffset) < temp_header.xMax
-          temp_header.yMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].north) * outputHeader.yScale + outputHeader.yOffset) < temp_header.yMax
-          temp_header.zMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].elev) * outputHeader.zScale + outputHeader.zOffset) < temp_header.zMax
+          temp_header.xMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].x) * outputHeader.xScale + outputHeader.xOffset) > temp_header.xMax
+          temp_header.yMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].y) * outputHeader.yScale + outputHeader.yOffset) > temp_header.yMax
+          temp_header.zMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].z) * outputHeader.zScale + outputHeader.zOffset) > temp_header.zMax
+          temp_header.xMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].x) * outputHeader.xScale + outputHeader.xOffset) < temp_header.xMax
+          temp_header.yMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].y) * outputHeader.yScale + outputHeader.yOffset) < temp_header.yMax
+          temp_header.zMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].z) * outputHeader.zScale + outputHeader.zOffset) < temp_header.zMax
           point_lun, outputLun, 0
           writeu, outputLun, temp_header
           free_lun, outputLun
@@ -228,7 +257,7 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
     'xScale', outputHeader.xScale, $
     'yScale', outputHeader.yScale, $
     'zScale', outputHeader.zScale, $
-    'xOffset', outputHeader.xOffset, $ 
+    'xOffset', outputHeader.xOffset, $
     'yOffset', outputHeader.yOffset, $
     'zOffset', outputHeader.zOffset $
     )

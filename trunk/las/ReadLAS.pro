@@ -32,13 +32,12 @@
 ;
 ;       Set the CHECK keyword to correct any internal inconsistancies in the header.
 ;
-;       Set the PROJECTION keyword to return an ENVI projection structure from projection information
-;       embedded in the file.  If no information exists, a value of -1 is returned.
-;
 ;       Set the NODATA keyword to prohibit reading the point data and return only the header.
 ;
 ;       Set the ASSOCLUN keyword to a named variable to use associated input/output to read the data in the
 ;       file.  The variable will be returned set the associated LUN value.
+;
+;       Set the WDP keyword to a named variable to contain the waveform data packets for LAS 1.3 files.
 ;
 ; DEPENDENCIES:
 ;
@@ -56,6 +55,7 @@
 ;       Added NODATA, PROJECTION, and ASSOCLUN keywords, June 2007
 ;       Minor change to check keyword code, March 2008. John Armston.
 ;       Updated for LAS 1.2 format. Removed point records check. 2010. John Armston.
+;       Update for LAS 1.3 format. Nov 2010. John Armston.
 ;
 ;###########################################################################
 ;
@@ -89,74 +89,70 @@
 ;
 ;###########################################################################
 
-pro ReadLAS, inputFile, header, data, records=records, check=check, projection=projection, $
-    noData=noData, assocLun=assocLun
+pro ReadLAS, inputFile, header, data, records=records, check=check, $
+    noData=noData, assocLun=assocLun, wdp=wdp
     
-  compile_opt idl2;, logical_predicate
+  compile_opt idl2
   FORWARD_FUNCTION InitHeaderLAS, InitDataLAS, InitRecordLAS
   
   ; Create the header structure
-  
   header = InitHeaderLAS()
   
   ; Get info about the file.  Then open the file and read the header
-  
   fInfo = file_info(inputFile)
-  
   openr, inputLun, inputFile, /get_lun, /swap_if_big_endian
   readu, inputLun, header
+  if (header.pointFormat ge 4) then begin
+    wdp = 0ULL
+    readu, inputLun, wdp
+    header = create_struct(header, 'wdp', wdp)
+  endif
   
   ; If the header indicates that the file contains variable length records, read them
-  
-  if header.nRecords then begin
+  if (header.nRecords gt 0) then begin
   
     ; Define and read variable length records
-  
     records = replicate(InitRecordLAS(), header.nRecords)
     
     for a=0,header.nRecords-1 do begin
     
+      ; Read the VLR
       tempRecord = InitRecordLAS(/noData)
       readu, inputLun, tempRecord
       
-      if tempRecord.recordLength then begin
-      
-        dataTemp = bytarr(tempRecord.recordLength)
+      ; Read the VLR data
+      if (tempRecord.recordLength gt 0) then begin
+        ; Check if the record data is a WPD
+        if (tempRecord.recordID ge 100 and tempRecord.recordID lt 356) then begin
+          dataTemp = InitWPDLAS()
+        endif else begin
+          dataTemp = bytarr(tempRecord.recordLength)
+        endelse
         readu, inputLun, dataTemp
-        
         records[a] = create_struct(tempRecord, 'data', ptr_new(dataTemp))
-        
-      endif else records[a] = create_struct(tempRecord, 'data', ptr_new())
+      endif else begin
+        records[a] = create_struct(tempRecord, 'data', ptr_new())
+      endelse
       
     endfor
     
-  endif else records = -1
+  endif else begin
   
-  ; Check for projection information in the variable length records
+    records = -1
+    
+  endelse
   
-  ;if n_tags(records) then projection = RecordsToProj(records) $
-  ;                   else projection = -1
   
   ; Read point data start signature if the file is in the LAS 1.0 format
-  
-  if header.versionMinor eq 0 then begin
+  if (header.versionMajor eq 1 and header.versionMinor eq 0) then begin
     pointStart = bytarr(2)
     readu, inputLun, pointStart
   endif
   
-  ; Make sure that the data offset value is correct.
-  
-  if header.dataOffset ne (fInfo.size - header.nPoints * header.pointLength) then begin
-  
-    print, 'header.dataOffset value is incorrect.  Fixing...'
-    header.dataOffset = fInfo.size - header.nPoints * header.pointLength
-    
-  endif
   
   if ~ keyword_set(noData) then begin
   
     ; Define a point data structure
-  
     dataStr = InitDataLAS(pointFormat=header.pointFormat)
     
     if keyword_set(assocLun) then begin
@@ -168,17 +164,14 @@ pro ReadLAS, inputFile, header, data, records=records, check=check, projection=p
     endif else begin
     
       ; Create an array of data structures to contain all of the point data
-    
       data = replicate(dataStr, header.nPoints)
       
       ; Read the point data
-      
       point_lun, inputLun, header.dataOffset
       readu,     inputLun, data
       free_lun,  inputLun
       
       ; If requested, perform consistancy check
-      
       if keyword_set(check) then begin
       
         if n_tags(records) then header.nRecords = n_elements(records) $
@@ -189,9 +182,9 @@ pro ReadLAS, inputFile, header, data, records=records, check=check, projection=p
         header.nReturns = histogram(ishft(ishft(data.nReturn, 5), -5), min=1, max=5)
         if total(header.nReturns) ne header.nPoints then header.nReturns[0] += (header.nPoints - total(header.nReturns))
         
-        header.xMax = max(data.east,  min=xMin) * header.xScale + header.xOffset
-        header.yMax = max(data.north, min=yMin) * header.yScale + header.yOffset
-        header.zMax = max(data.elev,  min=zMin) * header.zScale + header.zOffset
+        header.xMax = max(data.x,  min=xMin) * header.xScale + header.xOffset
+        header.yMax = max(data.y, min=yMin) * header.yScale + header.yOffset
+        header.zMax = max(data.z,  min=zMin) * header.zScale + header.zOffset
         header.xMin = xMin * header.xScale + header.xOffset
         header.yMin = yMin * header.yScale + header.yOffset
         header.zMin = zMin * header.zScale + header.zOffset

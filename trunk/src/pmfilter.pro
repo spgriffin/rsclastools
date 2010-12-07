@@ -94,11 +94,11 @@ PRO PMFilter,data,b_start=b_start,bmax=bmax,dh0=dh0,slope=slope,cell_size=cell_s
   if not keyword_set(height_threshold) then height_threshold=0.15
   
   ; Regularise the grid
-  counts = hist2d_rilidar(data.Easting,data.Northing,reverse_indices,n_cols,n_rows,BIN1=cell_size,BIN2=cell_size, $
-    MIN1=min(data.Easting),MIN2=min(data.Northing),MAX1=max(data.Easting),MAX2=max(data.Northing))
+  counts = hist2d_rilidar(data.x,data.y,reverse_indices,n_cols,n_rows,BIN1=cell_size,BIN2=cell_size, $
+    MIN1=min(data.x),MIN2=min(data.y),MAX1=max(data.x),MAX2=max(data.y))
   elevation_grid = float(temporary(counts))
   for i=0L,n_elements(elevation_grid)-1L,1L do begin
-    elevation_grid[i]=(reverse_indices[i] NE reverse_indices[i+1L]) ? min(data.Elevation[reverse_indices[reverse_indices[i]:reverse_indices[i+1L]-1L]]) : -1.0
+    elevation_grid[i]=(reverse_indices[i] NE reverse_indices[i+1L]) ? min(data.z[reverse_indices[reverse_indices[i]:reverse_indices[i+1L]-1L]]) : -1.0
   endfor
   null_flag=elevation_grid EQ -1.0
   null_index=where(null_flag EQ 1,null_index_count,complement=real_index)
@@ -209,11 +209,11 @@ PRO PMFilter,data,b_start=b_start,bmax=bmax,dh0=dh0,slope=slope,cell_size=cell_s
   type = (wflag GT 0) * 2 + (null_flag EQ 1)
   
   ; Classify original data points
-  class=bytarr(n_elements(data.Elevation))
+  class=bytarr(n_elements(data.z))
   for i=0L,n_elements(elevation_grid)-1L,1L do begin
     index = (type[i] EQ 1) ?  -1.0 : reverse_indices[reverse_indices[i]:reverse_indices[i+1L]-1L]
     if (index[0] NE -1.0) then begin
-      null=min(data.Elevation[index],min_index)
+      null=min(data.z[index],min_index)
       class[index[min_index]] = (type[i] EQ 2) ? 1B : 2B
     endif
   endfor
@@ -222,10 +222,10 @@ PRO PMFilter,data,b_start=b_start,bmax=bmax,dh0=dh0,slope=slope,cell_size=cell_s
   idx1 = where(class EQ 0, cnt1)
   idx2 = where(class EQ 2, cnt2)
   if (cnt1 GT 0) then begin
-    triangulate, data.Easting[idx2], data.Northing[idx2], triangles
-    elev_temp = griddata(data.Easting[idx2], data.Northing[idx2], data.Elevation[idx2], method='NaturalNeighbor', $
-      triangles=triangles, xout=data.Easting[idx1], yout=data.Northing[idx1])
-    gnd_idx = where(abs(data.Elevation[idx1] - elev_temp) le height_threshold, gnd_cnt, complement=veg_idx, ncomplement=veg_cnt)
+    triangulate, data.x[idx2], data.y[idx2], triangles
+    elev_temp = griddata(data.x[idx2], data.y[idx2], data.z[idx2], method='NaturalNeighbor', $
+      triangles=triangles, xout=data.x[idx1], yout=data.y[idx1])
+    gnd_idx = where(abs(data.z[idx1] - elev_temp) le height_threshold, gnd_cnt, complement=veg_idx, ncomplement=veg_cnt)
     class[idx1[gnd_idx]] = 2B
     class[idx1[veg_idx]] = 1B
   endif

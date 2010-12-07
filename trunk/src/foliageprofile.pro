@@ -104,7 +104,7 @@ PRO FoliageProfile, infile, type, null, binsize, height_threshold, rhovg_method,
   for i = 0L, n_elements(infile)-1L do begin
   
     ; Read the input file and get veg heights
-    ReadLAS, infile[i], header, data, /check
+    ReadLAS, infile[i], header, data
     fparts = strsplit(infile[i], '.', /extract)
     progressBar -> SetProperty, Text=strtrim(infile[i],2)
     

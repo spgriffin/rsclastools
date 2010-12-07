@@ -114,9 +114,9 @@ PRO ENVISurfaceInterpRaster_start, event
     info.productList[2]: productType = 'Height'
   endcase
   case info.proj_droplist->GetSelection() of
-    info.projList[0]: proj = 0
-    info.projList[1]: proj = 1
-    info.projList[2]: proj = 2
+    info.projList[0]: proj = 'MGA94'
+    info.projList[1]: proj = 'BNG'
+    info.projList[2]: proj = 'UTM'
   endcase
   Widget_Control, info.formats, Get_Value=formats
   outFormat = (formats eq 1) ? 'GeoTIFF' : 'ENVI'

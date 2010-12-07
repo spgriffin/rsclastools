@@ -84,14 +84,14 @@ PRO LidarFilter, infile, dh0, slope, resolution, b_max, b_start, height_threshol
   endif
   
   for i = 0L, n_elements(infile)-1L do begin
-    ReadLAS, infile[i], las_header, las_data, /check
+    ReadLAS, infile[i], las_header, las_data
     easting = double(las_data.(0)) * las_header.xscale + las_header.xoffset
     northing = double(las_data.(1)) * las_header.yscale + las_header.yoffset
     elevation = double(las_data.(2)) * las_header.zscale + las_header.zoffset
-    data = create_struct('Easting',temporary(easting),'Northing',temporary(northing),'Elevation',temporary(elevation))
+    data = create_struct('x',temporary(easting),'y',temporary(northing),'z',temporary(elevation))
     pmFilter,data,b_start=b_start,bmax=bmax,dh0=dh0,slope=slope,cell_size=resolution, progress_string=strtrim(infile[i],2),height_threshold=height_threshold
     las_data.(5) = data.class
-    WriteLAS, infile[i], las_header, las_data, /check
+    WriteLAS, infile[i], las_header, las_data, pointFormat=las_header.pointFormat
   endfor
   
 END

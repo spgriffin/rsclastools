@@ -99,7 +99,6 @@ PRO TileInterpolateHeight, lasfiles, method=method, tilesize=tilesize, null=null
   ; Start progress bar
   progressBar=Obj_New('progressbar', Color='Forest Green', Text='Initialising...', title='Surface Product', /fast_loop)
   progressBar->Start
-  bcount = 0.0
   
   ; Process all files separately
   opath = file_dirname(lasfiles[0])
@@ -110,6 +109,7 @@ PRO TileInterpolateHeight, lasfiles, method=method, tilesize=tilesize, null=null
     outfile = filepath(strjoin([fparts[0],'AGL.las'], '_'), root_dir=opath)
     las_input = lasfiles[j]
     progressBar -> SetProperty, Text=strtrim(las_input,2)
+    bcount = 0D
     progressbar->Update, 0D
     
     ; Tile

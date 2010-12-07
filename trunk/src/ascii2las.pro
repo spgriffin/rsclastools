@@ -95,8 +95,8 @@ PRO Ascii2LAS, infile, columns, delimiter, limit, skipline, class
     ; Initialise the output file
     fparts = strsplit(infile[i], '.', /extract)
     outputFile = fparts[0] + '.las'
-    las_data = InitDataLAS(pointFormat=1)
-    outputHeader = InitHeaderLAS()
+    las_data = InitDataLAS(pointFormat=3)
+    outputHeader = InitHeaderLAS(pointFormat=3)
     outputHeader.systemID = byte('ASCII import')
     outputHeader.xScale = 0.01D
     outputHeader.yScale = 0.01D
@@ -106,7 +106,7 @@ PRO Ascii2LAS, infile, columns, delimiter, limit, skipline, class
     outputHeader.zOffset = 0D
     outputHeader.pointFormat = 1
     outputHeader.versionMajor = 1
-    outputHeader.versionMinor = 1
+    outputHeader.versionMinor = 2
     WriteLAS, outputFile, outputHeader, /nodata, /check
     openw, outputLun, outputFile, /get_lun, /swap_if_big_endian, /append
     time = 0D

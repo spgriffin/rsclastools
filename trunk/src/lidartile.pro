@@ -95,7 +95,7 @@ PRO LidarTile, infile, no_columns, no_rows
   for i = 0L, n_elements(infile)-1L do begin
   
     progressBar -> SetProperty, Text=strtrim(infile[i],2)
-    ReadLAS, infile[i], las_header, las_data, /check
+    ReadLAS, infile[i], las_header, las_data
     fparts = strsplit(infile[i], '.', /extract)
     date = bin_date(systime(/utc))
     day = julday(date[1],date[2],date[0]) - julday(1,1,date[0]) + 1
@@ -125,12 +125,10 @@ PRO LidarTile, infile, no_columns, no_rows
         outputHeader.yMax = max(las_data[ri[ri[j]:ri[j+1L]-1L]].(1)) * las_header.yScale + las_header.yOffset
         outputHeader.zMin = min(las_data[ri[ri[j]:ri[j+1L]-1L]].(2)) * las_header.zScale + las_header.zOffset
         outputHeader.zMax = max(las_data[ri[ri[j]:ri[j+1L]-1L]].(2)) * las_header.zScale + las_header.zOffset
-        outputHeader.pointLength = n_tags(las_data[ri[ri[j]:ri[j+1L]-1L]], /data_length)
-        outputHeader.pointFormat = (outputHeader.pointLength EQ 20) ? 0 : 1
         if (total(outputHeader.nReturns) NE outputHeader.nPoints) then begin
           outputHeader.nReturns[0] += (outputHeader.nPoints - total(outputHeader.nReturns))
         endif
-        WriteLAS, outputFile, outputHeader, las_data[ri[ri[j]:ri[j+1L]-1L]]
+        WriteLAS, outputFile, outputHeader, las_data[ri[ri[j]:ri[j+1L]-1L]], pointFormat=outputHeader.pointFormat
         
         ; Update progress bar
         bcount += 1

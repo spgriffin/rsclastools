@@ -95,7 +95,7 @@ PRO LidarBin, infile, xMin, xMax, yMin, yMax, ProductType, StatsType, $
   for j = 0L, n_elements(infile)-1L do begin
   
     ; Read the input file and get veg heights
-    ReadLAS, infile[j], header, data, /check
+    ReadLAS, infile[j], header, data
     if (min(data.(5)) EQ 0) then begin
       ok = dialog_message(infile[j] + ': Unclassified returns', /error)
       continue

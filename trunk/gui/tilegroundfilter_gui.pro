@@ -121,6 +121,9 @@ PRO TileGroundFilter_GUI
   text = WIDGET_LABEL(Base3, value='A new LAS file is created because the order of returns is changed.', frame=0, /align_left)
   text = WIDGET_LABEL(Base3, value='For example, Input : t1.las', frame=0, /align_left)
   text = WIDGET_LABEL(Base3, value='Output : t1_Filtered.las', frame=0, /align_left)
+  text = WIDGET_LABEL(Base3, value='The output LAS file will not be time sequential due to tiling.', frame=0, /align_left)
+  text = WIDGET_LABEL(Base2, value='Ground points in the output file will have a value of 2.', frame=0, /align_left)
+  text = WIDGET_LABEL(Base2, value='Why? Consistency with improper bit field encoding of delivered LAS files.', frame=0, /align_left)
   
   ; Set up TABing between fields.
   tilexsize->SetTabNext, tileysize->GetTextID()

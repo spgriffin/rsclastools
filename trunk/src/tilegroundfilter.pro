@@ -77,6 +77,7 @@ PRO TileGroundFilter, lasfiles, resolution=resolution, tilesize=tilesize, b_star
     bmax=bmax,dh0=dh0,slope=slope,height_threshold=height_threshold
     
   ; Error handling
+  compile_opt idl2
   catch, theError
   if theError ne 0 then begin
     if (n_elements(progressbar) EQ 1) then progressbar->Destroy
@@ -100,7 +101,6 @@ PRO TileGroundFilter, lasfiles, resolution=resolution, tilesize=tilesize, b_star
   ; Start progress bar
   progressBar=Obj_New('progressbar', Color='Forest Green', Text='Initialising...', title='Ground Filter', /fast_loop)
   progressBar->Start
-  bcount = 0.0
   
   ; Process all files separately
   opath = file_dirname(lasfiles[0])
@@ -111,6 +111,7 @@ PRO TileGroundFilter, lasfiles, resolution=resolution, tilesize=tilesize, b_star
     outfile = filepath(strjoin([fparts[0],'Filtered.las'], '_'), root_dir=opath)
     las_input = lasfiles[j]
     progressBar -> SetProperty, Text=strtrim(las_input,2)
+    bcount = 0D
     progressbar->Update, 0D
     
     ; Tile
@@ -143,9 +144,26 @@ PRO TileGroundFilter, lasfiles, resolution=resolution, tilesize=tilesize, b_star
     
     ; Stitch and sort temporary tiles
     progressBar -> SetProperty, Text="Stitching LAS data"
-    openw, outputLun, outfile, /get_lun
-    ReadHeaderLas, lasfiles[j], temp_header
+    openw, outputLun, outfile, /get_lun, /swap_if_big_endian
+    ReadLAS, lasfiles[j], temp_header, temp_data, records=records, /noData
+    if (temp_header.pointFormat ge 4) then temp_header.wdp = 0LL
     writeu, outputLun, temp_header
+    
+    ; If variable length records are present, write them
+    if (n_tags(records) gt 0) then begin
+      for a=0,n_elements(records)-1 do begin
+        for b=0,4 do writeu, outputLun, records[a].(b)
+        if (records[a].recordLength gt 0) then begin
+          if (n_tags(*records[a].data) gt 0) then begin
+            dataTemp = *records[a].data
+            for b=0,n_tags(*records[a].data)-1 do writeu, outputLun, dataTemp.(b)
+          endif else begin
+            writeu, outputLun, *records[a].data
+          endelse
+        endif
+      endfor
+    endif
+       
     for i = 0L, tileStruct.nTiles-1L, 1L do begin
       if (tileStruct.empty[i] EQ 0) then begin
         ReadLAS, tileStruct.name[i], temp_header, temp_data

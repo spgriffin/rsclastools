@@ -95,6 +95,7 @@ PRO LidarMerge_GUI
   fields = ['Remove returns in buffer']
   bufferflag = cw_bgroup(tlb, fields, column=1, /nonexclusive)
   text = WIDGET_LABEL(tlb, value='If you used temporal tiling, there may be a buffer.', frame=0, /align_left)
+  text = WIDGET_LABEL(tlb, value='If you used spatial tiling, the output file will not be time sequential.', frame=0, /align_left)
   
   ; Do the rest
   button = Widget_Button(tlb, Value='Merge Data', UValue='StartLidarMerge')

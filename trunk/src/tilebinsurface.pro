@@ -95,7 +95,7 @@ PRO TileBinSurface, lasfiles, resolution=resolution, zone=zone, tilesize=tilesiz
   if not keyword_set(tilesize) then tilesize = [100.0,100.0]
   if not keyword_set(null) then null = 0.0
   if not keyword_set(hemisphere) then hemisphere='South'
-  if not keyword_set(proj) then proj=0
+  if not keyword_set(proj) then proj=''
   if not keyword_set(productType) then productType = 'Statistic'
   case productType of
     'Statistic': if not keyword_set(productOptions) then productOptions = {method:'Maximum',returnType:'All',field:'Height',class:'All'}
@@ -188,7 +188,8 @@ PRO TileBinSurface, lasfiles, resolution=resolution, zone=zone, tilesize=tilesiz
     if (outFormat eq 'ENVI') then begin
       writeENVIhdr, outfile, zone, resolution, tileStruct.ulx, tileStruct.uly, ncols, nrows, proj, hemisphere, productOptions.method
     endif else begin
-      writegeotiff, outfile, tileStruct.ulx, tileStruct.uly, proj, outfile+'.tif', cell_size=resolution, /assocInput, ncols=ncols, nrows=nrows
+      writegeotiff, outfile, tileStruct.ulx, tileStruct.uly, proj, outfile+'.tif', cell_size=resolution, /assocInput, $
+        ncols=ncols, nrows=nrows, zone=zone
       file_delete, outfile, /quiet
     endelse
     

@@ -148,13 +148,11 @@ PRO LidarSplitter, infile, no_splits, buffer, flag=flag
       outputHeader.yMax = max(outData.(1)) * las_header.yScale + las_header.yOffset
       outputHeader.zMin = min(outData.(2)) * las_header.zScale + las_header.zOffset
       outputHeader.zMax = max(outData.(2)) * las_header.zScale + las_header.zOffset
-      outputHeader.pointLength = n_tags(outData, /data_length)
-      outputHeader.pointFormat = (outputHeader.pointLength EQ 20) ? 0 : 1
       if (total(outputHeader.nReturns) NE outputHeader.nPoints) then begin
         outputHeader.nReturns[0] += (outputHeader.nPoints - total(outputHeader.nReturns))
       endif
       
-      WriteLAS, outputFile, outputHeader, outData
+      WriteLAS, outputFile, outputHeader, outData, pointFormat=outputHeader.pointFormat
       
       ; Update progress bar
       bcount += 1

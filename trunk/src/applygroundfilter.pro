@@ -77,6 +77,7 @@ PRO ApplyGroundFilter, tileStruct, col_n, row_n, b_start, bmax, dh0, $
     slope, resolution, height_threshold
     
   ; Keywords
+  compile_opt idl2
   forward_function filterReturns, GroundFilter
   
   ; Read tiles
@@ -113,6 +114,6 @@ PRO ApplyGroundFilter, tileStruct, col_n, row_n, b_start, bmax, dh0, $
   ;   reads, '00000010', value, format='(B)' - For unclassified (1) returns
   ;   class = ishft(ishft(byte(value),-4),4)
   data.(5) = class[cindex]
-  WriteLAS, outFile, header, data
+  WriteLAS, outFile, header, data, pointFormat=header.pointFormat
   
 END

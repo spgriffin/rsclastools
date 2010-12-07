@@ -129,6 +129,9 @@ PRO TilePointInterpHeights_GUI
   sectors = FSC_INPUTFIELD(Base2, Title='# sectors * + : ', Value=6, /IntegerValue, LabelAlign=1, /positive)
   text = WIDGET_LABEL(Base2, value='* Inverse Distance method.', frame=0, /align_left)
   text = WIDGET_LABEL(Base2, value=' + Polynomial regression method.', frame=0, /align_left)
+  text = WIDGET_LABEL(Base2, value='Assumes no bit field encoding in the LAS classification field.', frame=0, /align_left)
+  text = WIDGET_LABEL(Base2, value='Ground points should have a value of 2.', frame=0, /align_left)
+  text = WIDGET_LABEL(Base2, value='Why? I have not yet received a LAS file encoded differently.', frame=0, /align_left)
   
   tlb6 = widget_base(tlb, column=1,xsize=!QRSC_LIDAR_XSIZE)
   text6 = WIDGET_LABEL(tlb6, value='Output File Information', frame=0, /align_center)
@@ -136,6 +139,7 @@ PRO TilePointInterpHeights_GUI
   text = WIDGET_LABEL(Base6, value='Output filename is the input LAS filename with "_AGH" appended.', frame=0, /align_left)
   text = WIDGET_LABEL(Base6, value='For example, Input : t1.las', frame=0, /align_left)
   text = WIDGET_LABEL(Base6, value='Output : t1_AGH.las', frame=0, /align_left)
+  text = WIDGET_LABEL(Base6, value='All VLR and WDP are not copied to the output file.', frame=0, /align_left)
   
   Base7 = widget_base(tlb, column=1,xsize=!QRSC_LIDAR_XSIZE)
   button = Widget_Button(Base7, Value='Start AGH Calculation', UValue='StartTilePointInterpHeights')

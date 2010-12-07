@@ -123,7 +123,7 @@ PRO LidarPoint, infile, ProductType, StatsType, $
   
     ; Read the input file and get veg heights
     progressBar -> SetProperty, Text = strtrim(infile[j], 2)
-    ReadLAS, infile[j], header, data, /check
+    ReadLAS, infile[j], header, data
     if (min(data.(5)) EQ 0) then begin
       ok = dialog_message(infile[j] + ': Unclassified returns', /error)
       continue

@@ -86,7 +86,7 @@ PRO BoundsShapefile_start, event
   if (info.infile[0] EQ '') then return
   nFiles = n_elements(info.infile)
   for i = 0L, nFiles-1L, 1L do begin
-    ReadLAS, info.infile[i], las_header, las_data, /check
+    ReadLAS, info.infile[i], las_header, las_data
     ConvexHull, las_data.(0) * las_header.xScale + las_header.xOffset, las_data.(1) * las_header.yScale + las_header.yOffset, px, py
     fparts = strsplit(info.infile[i], '.', /extract)
     outfile = fparts[0] + '_extent'
