@@ -76,6 +76,7 @@
 PRO PointInterpolateHeight, tileStruct, col_n, row_n, method, null, min_points, sectors, smoothing, outputType
 
   ; Keywords
+  compile_opt idl2
   forward_function filterReturns
   
   ; Read tiles

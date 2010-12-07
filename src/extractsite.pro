@@ -118,7 +118,7 @@ PRO ExtractSite, infile, shape, name, easting, northing, major_axis, minor_axis,
     if (count gt 0) then begin
     
       ; Read the input file
-      ReadLAS, infile[i], header, data, /check
+      ReadLAS, infile[i], header, data
       fparts = strsplit(infile[i], '.', /extract)
       progressBar -> SetProperty, text=strtrim(infile[i], 2)
       
@@ -175,15 +175,42 @@ PRO ExtractSite, infile, shape, name, easting, northing, major_axis, minor_axis,
           outputHeader.xScale = 0.01D
           outputHeader.yScale = 0.01D
           outputHeader.zScale = 0.01D
-          outputHeader.pointLength = n_tags(dataSub, /data_length)
-          outputHeader.pointFormat = (outputHeader.pointLength EQ 20) ? 0 : 1
+          outputHeader.nRecords = 0
+          case outputHeader.pointFormat of
+            0: begin
+              outputHeader.headerSize = 227US
+              outputHeader.dataOffset = 227UL
+            end
+            1: begin
+              outputHeader.headerSize = 227US
+              outputHeader.dataOffset = 227UL
+            end
+            2: begin
+              outputHeader.headerSize = 227US
+              outputHeader.dataOffset = 227UL
+            end
+            3: begin
+              outputHeader.headerSize = 227US
+              outputHeader.dataOffset = 227UL
+            end
+            4: begin
+              outputHeader.headerSize = 235US
+              outputHeader.dataOffset = 235UL
+              outputHeader.wdp = 0LL
+            end
+            5: begin
+              outputHeader.headerSize = 235US
+              outputHeader.dataOffset = 235UL
+              outputHeader.wdp = 0LL
+            end
+          endcase
           if (total(outputHeader.nReturns) NE outputHeader.nPoints) then begin
             outputHeader.nReturns[0] += (outputHeader.nPoints - total(outputHeader.nReturns))
           endif
           
           ; Write output
           outputFile = strtrim(fparts[0],2) + '_' + shape_name + '_' + strtrim(name[j],2) + '.' + fparts[1]
-          WriteLAS, outputFile, outputHeader, dataSub
+          WriteLAS, outputFile, outputHeader, dataSub, pointFormat=outputHeader.pointFormat
           
         endif
         

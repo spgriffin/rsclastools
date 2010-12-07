@@ -87,7 +87,7 @@ PRO LASmerge, inFiles, outFile, new_psid=new_psid, buffer=buffer
   for i = 0L, n_elements(inFiles)-1L do begin
   
     ; Read in the LAS files (WARNING: memory may be an issue)
-    readLAS, inFiles[i], header, data, /check
+    readLAS, inFiles[i], header, data
     
     ; Remove buffer returns if necessary
     if keyword_set(buffer) then begin
@@ -118,7 +118,7 @@ PRO LASmerge, inFiles, outFile, new_psid=new_psid, buffer=buffer
   outputHeader.zMax = max(all_data.(2)) * header.zScale + header.zOffset
   
   ; Write the data subset (sorted by time) to the new LAS file
-  writeLAS, outFile, outputHeader, all_data[bsort(all_data.Time)]
+  writeLAS, outFile, outputHeader, all_data[bsort(all_data.Time)], pointFormat=outputHeader.pointFormat
   ok = dialog_message('LAS files merged.', /information)
   
 END

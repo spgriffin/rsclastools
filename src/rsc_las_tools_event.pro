@@ -121,6 +121,8 @@ PRO RSC_LAS_Tools_Event, event
       
       'LasInfo': LidarLASinfo_GUI
       
+      'LasRecord': LidarLASrecords_GUI
+      
       'LasCheck': LidarLAScheck_GUI
       
       'LAS2Shapefile': LAS2Shapefile_GUI

@@ -100,6 +100,7 @@ PRO LidarTile_GUI
   text = WIDGET_LABEL(tlb, value='The output files are named <prefix>_<x>_<y>.las,', frame=0, /align_left)
   text = WIDGET_LABEL(tlb, value='where x and y are the row and column numbers, respectively.', frame=0, /align_left)
   text = WIDGET_LABEL(tlb, value='If LAS file are merged the <prefix> is the prefix of the first LAS file.', frame=0, /align_left)
+  text = WIDGET_LABEL(tlb, value='Note that all VLR and WDP are not copied to the output files.', frame=0, /align_left)
   
   ; Set up TABing between fields.
   field1->SetTabNext, field2->GetTextID()

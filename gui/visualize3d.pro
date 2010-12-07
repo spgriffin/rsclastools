@@ -430,9 +430,9 @@ PRO Data_Initialize, info, subset, type=type
   
   widget_control, /hourglass
   mesh_obj, 0, vert, poly, $
-    transpose([[(*info.dataPtr).east  * info.header.xScale + info.header.xOffset], $
-    [(*info.dataPtr).north * info.header.yScale + info.header.yOffset], $
-    [(*info.dataPtr).elev  * info.header.zScale + info.header.zOffset]])
+    transpose([[(*info.dataPtr).x  * info.header.xScale + info.header.xOffset], $
+    [(*info.dataPtr).y * info.header.yScale + info.header.yOffset], $
+    [(*info.dataPtr).z  * info.header.zScale + info.header.zOffset]])
     
   info.poly->SetProperty, data=vert, polygons=poly
   
@@ -702,7 +702,7 @@ PRO Viz_Surface_Event, event
     end
     'RAMPED':  begin
       for i=0,n_tags(info.buttons.source)-1 do widget_control, info.buttons.source.(i), set_button=0
-      widget_control, info.buttons.source.elev, set_button=1
+      widget_control, info.buttons.source.z, set_button=1
       Viz_Surface_Update, info
     end
     'INTEN':  begin
@@ -790,8 +790,8 @@ PRO Viz_Surface_Update, info
     info.thisColorbar->SetProperty, Hide=1
   endif
   
-  if (widget_info(info.buttons.source.elev, /button_set)) then begin
-    info.poly->SetProperty, vert_colors=bytscl((*info.dataPtr).elev, /nan)
+  if (widget_info(info.buttons.source.z, /button_set)) then begin
+    info.poly->SetProperty, vert_colors=bytscl((*info.dataPtr).z, /nan)
     info.thisColorbar->SetProperty, Hide=0
     oTitle->SetProperty, Strings='Elevation'
     oTickText->SetProperty, Strings=strcompress(round([info.header.zMin,info.header.zMax]),/remove)
@@ -847,8 +847,8 @@ PRO Viz_Surface_Update, info
 ;    envi_select, fid=imgID, pos=imgPos, /no_dims
 ;    if n_elements(imgPos) eq 1 or n_elements(imgPos) eq 3 then begin
 ;        envi_convert_file_coordinates, imgID, xImage, yImage, $
-;            (*info.dataPtr).east  * info.header.xScale + info.header.xOffset, $
-;            (*info.dataPtr).north * info.header.yScale + info.header.yOffset
+;            (*info.dataPtr).x  * info.header.xScale + info.header.xOffset, $
+;            (*info.dataPtr).y * info.header.yScale + info.header.yOffset
 ;        envi_file_query, imgID, ns=ns, nl=nl
 ;        imgRoi = envi_create_roi(ns=ns, nl=nl, /no_update)
 ;        envi_define_roi, imgRoi, /no_update, /point, xpts=xImage, ypts=yImage

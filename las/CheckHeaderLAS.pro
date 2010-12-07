@@ -139,7 +139,6 @@ PRO CheckHeaderLAS, infile, splitsize=splitsize
     outputHeader.zMin = min(outData.(2)) * las_header.zScale + las_header.zOffset
     outputHeader.zMax = max(outData.(2)) * las_header.zScale + las_header.zOffset
     outputHeader.pointLength = n_tags(outData, /data_length)
-    outputHeader.pointFormat = (outputHeader.pointLength EQ 20) ? 0 : 1
     if (total(outputHeader.nReturns) NE outputHeader.nPoints) then begin
       outputHeader.nReturns[0] += (outputHeader.nPoints - total(outputHeader.nReturns))
     endif
@@ -154,9 +153,16 @@ PRO CheckHeaderLAS, infile, splitsize=splitsize
     28: outputHeader.pointFormat = 1
     26: outputHeader.pointFormat = 2
     34: outputHeader.pointFormat = 3
+    57: outputHeader.pointFormat = 4
+    63: outputHeader.pointFormat = 5
   endcase
-  if outputHeader.dataOffset ne (fInfo.size - outputHeader.nPoints * outputHeader.pointLength) then begin
-    outputHeader.dataOffset = fInfo.size - outputHeader.nPoints * outputHeader.pointLength
+  if (outputHeader.pointFormat ge 4) then begin
+    eopData = (outputHeader.wdp gt 0) ? outputHeader.wdp : fInfo.size
+  endif else begin
+    eopData = fInfo.size
+  endelse
+  if outputHeader.dataOffset ne (eopData - outputHeader.nPoints * outputHeader.pointLength) then begin
+    outputHeader.dataOffset = eopData - outputHeader.nPoints * outputHeader.pointLength
   endif
   
   ; Write new header to the file

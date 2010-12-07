@@ -94,7 +94,7 @@ PRO InterpolateHeight, infile, method, null, smoothing, power, min_points, secto
   for i = 0L, n_elements(infile)-1L do begin
   
     ; Read the input file
-    ReadLAS, infile[i], header, data, /check
+    ReadLAS, infile[i], header, data
     progressBar -> SetProperty, Text=strtrim(infile[i],2)
     
     ; Get data for interpolation
@@ -174,7 +174,7 @@ PRO InterpolateHeight, infile, method, null, smoothing, power, min_points, secto
         header.systemID = byte('Height: Elev')
       end
     endcase
-    WriteLAS, outfile, header, data, /check
+    WriteLAS, outfile, header, data, /check, pointFormat=header.pointFormat
     
     ; Update progress bar
     bcount += 1.0

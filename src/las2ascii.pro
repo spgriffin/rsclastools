@@ -190,9 +190,9 @@ PRO LAS2ASCII, infile, columns, null, splitsize=splitsize
       no_fields = total(columns)
       for k = 0D, nPoints - 1D, 1D do begin
         line = [string(data[k].Time, format='(f12.5)'), $
-          string(data[k].East * header.xScale + header.xOffset, format='(f10.2)'), $
-          string(data[k].North * header.yScale + header.yOffset, format='(f10.2)'), $
-          string(data[k].Elev * header.zScale + header.zOffset, format='(f8.2)'), $
+          string(data[k].x * header.xScale + header.xOffset, format='(f10.2)'), $
+          string(data[k].y * header.yScale + header.yOffset, format='(f10.2)'), $
+          string(data[k].z * header.zScale + header.zOffset, format='(f8.2)'), $
           string(data[k].Inten, format='(i4)'), $
           string(Height[k], format='(f8.2)'), $
           string(return_n[k], format='(i1)'), $

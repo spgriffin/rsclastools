@@ -99,7 +99,7 @@ PRO LidarInterpolate, infile, returnList, return_type, xMax, xMin, yMax, yMin, $
   for i = 0L, n_elements(infile)-1L do begin
   
     ; Read the input file and index returns to interpolate
-    ReadLAS, infile[i], las_header, las_data, /check
+    ReadLAS, infile[i], las_header, las_data
     case return_type of
       returnList[0]: index = filterReturns(las_data, type=4)
       returnList[1]: index = filterReturns(las_data, type=5)

@@ -103,14 +103,14 @@ FUNCTION filterReturns, data, type=type, n=n, limit=limit
     end
     
     3: begin ; Unique returns
-      xMax = max(data.east,  min=xMin)
-      yMax = max(data.north, min=yMin)
-      zMin = min(data.elev)
+      xMax = max(data.x, min=xMin)
+      yMax = max(data.y, min=yMin)
+      zMin = min(data.z)
       eastRange  = ulong64(xMax - xMin)
       northRange = ulong64(yMax - yMin)
-      uniqCoords = eastRange * northRange * (data.elev  - zMin) $
-        + eastRange *              (data.north - yMin) $
-        +                          (data.east  - xMin)
+      uniqCoords = eastRange * northRange * (data.z  - zMin) $
+        + eastRange *              (data.y - yMin) $
+        +                          (data.x  - xMin)
       uniqCoords = uniq(bsort(uniqCoords))
       result = bytarr(n_elements(data.(0)))
       result[uniqCoords] = 1

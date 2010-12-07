@@ -73,7 +73,7 @@
 ;
 ;###########################################################################
 
-PRO WRITEGEOTIFF, input, x0, y0, proj, output, cell_size=cell_size, assocInput=assocInput, ncols=ncols, nrows=nrows
+PRO WRITEGEOTIFF, input, x0, y0, proj, output, cell_size=cell_size, assocInput=assocInput, ncols=ncols, nrows=nrows, zone=zone
 
   ; Error handling
   catch, theError
@@ -86,6 +86,13 @@ PRO WRITEGEOTIFF, input, x0, y0, proj, output, cell_size=cell_size, assocInput=a
   
   ; Initialise variables
   if not keyword_set(cell_size) then cell_size = 1D
+  if keyword_set(zone) then begin
+    case proj of
+      'MGA94': proj = 28300L + zone
+      'BNG': proj = 27700L
+      'UTM': proj = 32700L + zone
+    endcase
+  endif
   
   ; Setup the geotiff structure
   geo = create_struct('MODELTIEPOINTTAG', [0D, 0D, 0D, x0, y0, 0D])

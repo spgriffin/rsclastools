@@ -75,7 +75,8 @@
 ;###########################################################################
 
 PRO CreateBoundsShapefile, outfile, xcoords, ycoords, name, kml=kml, in_proj=in_proj, out_proj=out_proj, zone=zone, hemisphere=hemisphere
-
+  
+  compile_opt idl2
   forward_function ReprojectCoords
   
   ; Keywords
@@ -128,7 +129,7 @@ PRO CreateBoundsShapefile, outfile, xcoords, ycoords, name, kml=kml, in_proj=in_
   endif else begin
   
     ; Convert the coordinates to lat/long
-    xyout = ReprojectCoords(x_coords, y_coords, in_proj, out_proj, zone=zone, hemisphere=hemisphere)
+    xyout = ReprojectCoords(xcoords, ycoords, in_proj, out_proj, zone=zone, hemisphere=hemisphere)
     vertices = transpose([[xyout[0,*]],[xyout[1,*]]])
     
     ;Create the shapefile and define the entity type as Polygon

@@ -84,7 +84,7 @@ FUNCTION WriteLidarAttributeFile, infile, type, attribute
   day = julday(date[1],date[2],date[0]) - julday(1,1,date[0]) + 1
   header.day  = uint(day)
   header.year = uint(date[0])
-  if not file_test(outputFile) then WriteLAS, outputFile, header, /nodata
+  if not file_test(outputFile) then WriteLAS, outputFile, header, /nodata, pointFormat=header.pointFormat
   return, outputFile
   
 END

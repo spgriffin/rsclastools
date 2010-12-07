@@ -105,9 +105,9 @@ FUNCTION SurfaceInterpolate, tileStruct, col_n, row_n, method, resolution, null,
       class = ishft(ishft(all_data.class, 4), -4)
       gindex = where(class EQ 2, gcount)
       if (gcount lt 6) then return, replicate(null,ncol,nrow)
-      easting = all_data[gindex].east * header.xScale + header.xOffset
-      northing = all_data[gindex].north * header.yScale + header.yOffset
-      zvalue = all_data[gindex].elev * header.zScale + header.zOffset
+      easting = all_data[gindex].x * header.xScale + header.xOffset
+      northing = all_data[gindex].y * header.yScale + header.yOffset
+      zvalue = all_data[gindex].z * header.zScale + header.zOffset
       myDelVar, all_data
       grid_input, easting, northing, zvalue, easting, northing, zvalue, epsilon=half_pixel, duplicates='Min'
     end
@@ -115,8 +115,8 @@ FUNCTION SurfaceInterpolate, tileStruct, col_n, row_n, method, resolution, null,
       first = filterReturns(all_data, type=1, n=1)
       findex = where(first EQ 1, fcount)
       if (fcount lt 6) then return, replicate(null,ncol,nrow)
-      easting = all_data[findex].east * header.xScale + header.xOffset
-      northing = all_data[findex].north * header.yScale + header.yOffset
+      easting = all_data[findex].x * header.xScale + header.xOffset
+      northing = all_data[findex].y * header.yScale + header.yOffset
       zvalue = float(all_data[findex].inten)
       myDelVar, all_data
       grid_input, easting, northing, zvalue, easting, northing, zvalue, epsilon=half_pixel, duplicates='Avg'
@@ -125,8 +125,8 @@ FUNCTION SurfaceInterpolate, tileStruct, col_n, row_n, method, resolution, null,
       first = filterReturns(all_data, type=1, n=1)
       findex = where(first EQ 1, fcount)
       if (fcount lt 6) then return, replicate(null,ncol,nrow)
-      easting = all_data[findex].east * header.xScale + header.xOffset
-      northing = all_data[findex].north * header.yScale + header.yOffset
+      easting = all_data[findex].x * header.xScale + header.xOffset
+      northing = all_data[findex].y * header.yScale + header.yOffset
       case string(header.systemID) of
         'Height: Source': begin
           zvalue = all_data[findex].(8) * 0.01
