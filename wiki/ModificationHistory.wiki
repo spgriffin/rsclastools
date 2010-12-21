@@ -1,8 +1,9 @@
 = RSC LAS Tools Modification History =
 
-== Version 1.3 - 7/12/2010 ==
+== Version 1.3 - 21/12/2010 ==
   * Updated to read/write LAS 1.3 (there is currently no functionality to process waveform data packets)
     * Added variable length record header viewer
+    * Removed 3D data viewer. Use "ENVI LiDAR Tools" if you want this.
   * More bug fixes, more to come
 
 == Version 1.2 - 22/11/2010 ==
