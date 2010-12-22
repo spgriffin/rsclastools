@@ -154,6 +154,7 @@ PRO TileInterpolateHeight, lasfiles, method=method, tilesize=tilesize, null=null
       end
     endcase
     writeu, outputLun, temp_header
+    point_lun, outputLun, temp_header.dataOffset
     for i = 0L, tileStruct.nTiles-1L, 1L do begin
       if (tileStruct.empty[i] EQ 0) then begin
         ReadLAS, tileStruct.name[i], temp_header, temp_data

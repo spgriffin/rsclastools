@@ -110,7 +110,7 @@ PRO CreateDEM, lasfile, method=method, resolution=resolution, zone=zone, tilesiz
     endfor
     writeu, lun, temp
   endfor
-  doDelVar, temp
+  myDelVar, temp
   free_lun, lun
   
   ; Delete temporary tiles

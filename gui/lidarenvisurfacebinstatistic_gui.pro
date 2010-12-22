@@ -174,6 +174,7 @@ PRO LidarENVISurfaceBinStatistic_GUI
   text = WIDGET_LABEL(Base1, value='Output file format : ', frame=0, /align_left)
   format_fields = ['ENVI', 'GeoTIFF']
   formats = cw_bgroup(Base1, format_fields, column=2, /exclusive, set_value=0)
+  text = WIDGET_LABEL(Base1, value='Warning: Currently writing to GeoTIFF requires all data to be in memory', frame=0, /align_left)
   
   Base3 = widget_base(tlb, column=1)
   text = WIDGET_LABEL(Base3, value='Information', frame=0, /align_center)

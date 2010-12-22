@@ -170,6 +170,7 @@ PRO LidarENVISurfaceBinCanopy_GUI
   text = WIDGET_LABEL(Base1, value='Output file format : ', frame=0, /align_left)
   format_fields = ['ENVI', 'GeoTIFF']
   formats = cw_bgroup(Base1, format_fields, column=2, /exclusive, set_value=0)
+  text = WIDGET_LABEL(Base1, value='Warning: Currently writing to GeoTIFF requires all data to be in memory', frame=0, /align_left)
   
   tlb3 = widget_base(tlb, column=1, xsize=!QRSC_LIDAR_XSIZE)
   text3 = WIDGET_LABEL(tlb3, value='Lidar Index and Fractional Cover Product Settings', frame=0, /align_center)
@@ -179,7 +180,7 @@ PRO LidarENVISurfaceBinCanopy_GUI
   height_threshold_top = FSC_INPUTFIELD(Base3, Title='Fractional Cover <= Top Height Threshold (m) : ', Value=0.0, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base3, value=' Weights for "Weighted Sum" : ', frame=0, /align_left)
   weight_VegGnd = FSC_INPUTFIELD(Base3, Title=' First Returns Only : ', Value=0.50, /FloatValue, LabelAlign=1, decimal=2)
-  weight_Double = FSC_INPUTFIELD(Base3, Title=' First & Last Returns : ', Value=0.75, /FloatValue, LabelAlign=1, decimal=2)
+  weight_Double = FSC_INPUTFIELD(Base3, Title=' First & Last Returns : ', Value=1.00, /FloatValue, LabelAlign=1, decimal=2)
   weight_Single = FSC_INPUTFIELD(Base3, Title=' Singular Returns : ', Value=1.00, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base3, value='Calibration of "Count Ratio" to cover metrics:', frame=0, /align_left)
   text = WIDGET_LABEL(Base3, value='Note: This has only been tested for a range of sites within Queensland', frame=0, /align_left)

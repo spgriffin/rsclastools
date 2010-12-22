@@ -116,7 +116,7 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
   case outputHeader.pointFormat of
     0: begin
       outputHeader.headerSize = 227US
-      outputHeader.dataOffset = 227UL
+      outputHeader.dataOffset = 229UL
     end
     1: begin
       outputHeader.headerSize = 227US
@@ -180,7 +180,7 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
       upper = (lower + splitsize - 1UL) < (las_header.nPoints - 1UL)
       
       ; Read the chunk
-      nPoints = upper - lower
+      nPoints = upper - lower + 1UL
       p_index = lindgen(nPoints) + lower
       tempDataStr = InitDataLAS(pointFormat=las_header.pointFormat)
       tempData = replicate(tempDataStr, nPoints)

@@ -101,7 +101,7 @@ PRO RSC_LAS_TOOLS
   importMenu = Widget_Button(fileMenu, Value='Import to LAS', /Menu)
   button = Widget_button(importMenu, Value='ASCII', UValue='Ascii2LAS')
   button = Widget_button(importMenu, Value='TLS PTS', UValue='Ascii2LAS_TLS')
-  button = Widget_Button(fileMenu, Value='"ENVI Lidar Tools" 3D Viewer', UValue='Visualise', /separator)
+  ;button = Widget_Button(fileMenu, Value='"ENVI Lidar Tools" 3D Viewer', UValue='Visualise', /separator)
   button = Widget_Button(fileMenu, Value='Exit', UValue='Quit', /separator)
   
   mapMenu = Widget_Button(menuBase, Value='Map', /Menu)
