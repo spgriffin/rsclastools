@@ -76,7 +76,7 @@
 PRO LidarAttributeSplit, infile, type=type, splitsize=splitsize
 
   ; Error handling
-  forward_function WriteLidarAttributeFile
+  forward_function WriteLidarAttributeFile, bsort
   catch, theError
   if theError ne 0 then begin
     if (n_elements(progressbar) EQ 1) then progressbar->Destroy
@@ -157,13 +157,14 @@ PRO LidarAttributeSplit, infile, type=type, splitsize=splitsize
       endcase
       
       ; Write attribute subset
-      attributes = tmpdata[uniq(tmpdata, sort(tmpdata))]
+      attributes = tmpdata[uniq(tmpdata, bsort(tmpdata))]
       for k = 0L, n_elements(attributes)-1L, 1L do begin
         outputFile = WriteLidarAttributeFile(infile[i], name, attributes[k])
         index = where(tmpdata eq attributes[k], count)
         openw, outputLun, outputFile, /get_lun, /swap_if_big_endian, /append
-        writeu, outputLun, outData[index]
         ReadHeaderLas, outputFile, temp_header
+        point_lun, outputLun, temp_header.dataOffset
+        writeu, outputLun, outData[index]
         temp_header.nPoints += count
         tmp_header_nReturns = temp_header.nReturns
         temp_header.nReturns = histogram(ishft(ishft(outData[index].nReturn, 5), -5), min=1, max=5, input=tmp_header_nReturns)

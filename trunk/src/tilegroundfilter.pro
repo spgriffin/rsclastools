@@ -163,7 +163,9 @@ PRO TileGroundFilter, lasfiles, resolution=resolution, tilesize=tilesize, b_star
         endif
       endfor
     endif
-       
+    
+    ; Write out the data
+    point_lun, outputLun, temp_header.dataOffset   
     for i = 0L, tileStruct.nTiles-1L, 1L do begin
       if (tileStruct.empty[i] EQ 0) then begin
         ReadLAS, tileStruct.name[i], temp_header, temp_data

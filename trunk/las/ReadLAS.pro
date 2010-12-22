@@ -55,7 +55,7 @@
 ;       Added NODATA, PROJECTION, and ASSOCLUN keywords, June 2007
 ;       Minor change to check keyword code, March 2008. John Armston.
 ;       Updated for LAS 1.2 format. Removed point records check. 2010. John Armston.
-;       Update for LAS 1.3 format. Nov 2010. John Armston.
+;       Update for LAS 1.3 format. Removed CHECK keyword. Nov 2010. John Armston.
 ;
 ;###########################################################################
 ;
@@ -89,9 +89,8 @@
 ;
 ;###########################################################################
 
-pro ReadLAS, inputFile, header, data, records=records, check=check, $
-    noData=noData, assocLun=assocLun, wdp=wdp
-    
+pro ReadLAS, inputFile, header, data, records=records, noData=noData, assocLun=assocLun, wdp=wdp
+
   compile_opt idl2
   FORWARD_FUNCTION InitHeaderLAS, InitDataLAS, InitRecordLAS
   
@@ -147,8 +146,9 @@ pro ReadLAS, inputFile, header, data, records=records, check=check, $
   if (header.versionMajor eq 1 and header.versionMinor eq 0) then begin
     pointStart = bytarr(2)
     readu, inputLun, pointStart
-  endif
-  
+  endif else begin
+    point_lun, inputLun, header.dataOffset
+  endelse
   
   if ~ keyword_set(noData) then begin
   
@@ -170,26 +170,6 @@ pro ReadLAS, inputFile, header, data, records=records, check=check, $
       point_lun, inputLun, header.dataOffset
       readu,     inputLun, data
       free_lun,  inputLun
-      
-      ; If requested, perform consistancy check
-      if keyword_set(check) then begin
-      
-        if n_tags(records) then header.nRecords = n_elements(records) $
-        else header.nRecords = 0
-        
-        header.pointLength = n_tags(data, /data_length)
-        
-        header.nReturns = histogram(ishft(ishft(data.nReturn, 5), -5), min=1, max=5)
-        if total(header.nReturns) ne header.nPoints then header.nReturns[0] += (header.nPoints - total(header.nReturns))
-        
-        header.xMax = max(data.x,  min=xMin) * header.xScale + header.xOffset
-        header.yMax = max(data.y, min=yMin) * header.yScale + header.yOffset
-        header.zMax = max(data.z,  min=zMin) * header.zScale + header.zOffset
-        header.xMin = xMin * header.xScale + header.xOffset
-        header.yMin = yMin * header.yScale + header.yOffset
-        header.zMin = zMin * header.zScale + header.zOffset
-        
-      endif
       
     endelse
     

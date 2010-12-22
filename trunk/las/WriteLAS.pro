@@ -166,7 +166,11 @@ pro WriteLAS, outputFile, header, data, records=records, check=check, nodata=nod
   endif
   
   ; If necessary, write the point data start signature
-  if (header.versionMinor eq 0) then writeu, outputLun, bytarr(2)
+  if (header.versionMinor eq 0) then begin
+    writeu, outputLun, bytarr(2)
+  endif else begin
+    point_lun, outputLun, header.dataOffset
+  endelse
   
   ; Unless the NODATA flag is set, write the data
   if ~ keyword_set(nodata) then begin

@@ -179,7 +179,7 @@ PRO ExtractSite, infile, shape, name, easting, northing, major_axis, minor_axis,
           case outputHeader.pointFormat of
             0: begin
               outputHeader.headerSize = 227US
-              outputHeader.dataOffset = 227UL
+              outputHeader.dataOffset = 229UL
             end
             1: begin
               outputHeader.headerSize = 227US
