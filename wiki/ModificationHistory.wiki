@@ -1,5 +1,13 @@
 = RSC LAS Tools Modification History =
 
+==Version 1.4 - 6/1/2011==
+  * Corrected calculation of apparent foliage profiles
+  * Fixed bug where incorrect minX and minY header values were assigned during tiling
+  * Fixed bug where vertices array used to create extent shp/kml files was 1D instead of 2D
+  * Added area, centroid (x,y) and perimeter as attributes in extent shapefiles
+  * Added option when creating extent shp/kml to use extents from header instead of point data
+  * Rewrote code to merge las files to be more memory efficient and stricter with output LAS header values
+
 == Version 1.3 - 21/12/2010 ==
   * Updated to read/write LAS 1.3 (there is currently no functionality to process waveform data packets)
     * Added variable length record header viewer
