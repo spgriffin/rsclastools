@@ -116,7 +116,7 @@ PRO LidarLASrecords_GUI
       header = InitHeaderLAS()
       openr, inputLun, infile[i], /get_lun, /swap_if_big_endian
       readu, inputLun, header
-      if (header.pointFormat ge 4) then begin
+      if (header.versionMinor eq 3) then begin
         wdp = 0ULL
         readu, inputLun, wdp
         header = create_struct(header, 'wdp', wdp)
