@@ -124,17 +124,17 @@ PRO LidarPoint, infile, ProductType, StatsType, $
     ; Read the input file and get veg heights
     progressBar -> SetProperty, Text = strtrim(infile[j], 2)
     ReadLAS, infile[j], header, data
-    if (min(data.(5)) EQ 0) then begin
+    if (min(data.class) EQ 0) then begin
       ok = dialog_message(infile[j] + ': Unclassified returns', /error)
       continue
     endif
     if (statsType NE 'Terrain') then begin
       case string(header.systemID) of
         'Height: Source': begin
-          height = data.(8) * 0.01
+          height = data.source * 0.01
         end
         'Height: Elev': begin
-          height = data.(2) * header.zScale + header.zOffset
+          height = data.z * header.zScale + header.zOffset
         end
         else: begin
           progressBar->Destroy
@@ -202,14 +202,14 @@ PRO LidarPoint, infile, ProductType, StatsType, $
           weights, null, percentile, rhovg_method, rhovg_percentile, constant, interval, height_threshold_top=height_threshold_top, vbinsize=vbinsize)
       end
       'Terrain': begin
-        value = TerrainMetric(data[index].(2) * header.zScale + header.zOffset, $
-          data[index].(0) * header.xScale + header.xOffset, $
-          data[index].(1) * header.yScale + header.yOffset, $
+        value = TerrainMetric(data[index].z * header.zScale + header.zOffset, $
+          data[index].x * header.xScale + header.xOffset, $
+          data[index].y * header.yScale + header.yOffset, $
           productType, null)
       end
       else: begin
         if (statsType EQ 'Density') then begin
-          ConvexHull, data[index].(0) * header.xScale + header.xOffset, data[index].(1) * header.xScale + header.xOffset, px, py
+          ConvexHull, data[index].x * header.xScale + header.xOffset, data[index].y * header.xScale + header.xOffset, px, py
           extent = Obj_New('IDLanROI', px, py)
           status = extent->IDLanROI::ComputeGeometry(area=area)
           if (status EQ 0) then area = null

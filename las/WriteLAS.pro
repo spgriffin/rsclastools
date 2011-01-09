@@ -76,11 +76,9 @@
 ;
 ;###########################################################################
 
-pro WriteLAS, outputFile, header, data, records=records, check=check, nodata=nodata, $
-    pointFormat=pointFormat, wdp=wdp
-    
+pro WriteLAS, outputFile, header, data, records=records, check=check, nodata=nodata, wdp=wdp
+
   compile_opt idl2
-  if not keyword_set(pointFormat) then pointFormat = 3
   
   ; Make sure the header fields are updated
   header.signature  = byte('LASF')
@@ -94,12 +92,29 @@ pro WriteLAS, outputFile, header, data, records=records, check=check, nodata=nod
   ; If requested, perform consistency check
   if keyword_set(check) then begin
   
-    if (header.pointFormat le 3) then begin
-      header.dataOffset = 227B
-    endif else begin
-      header.dataOffset = 235B
-    endelse
-    if (header.versionMinor eq 0) then header.dataOffset += 2
+    ; versionMinor specifics
+    case header.versionMinor of
+      0: begin
+        header.globalEncoding = 0US
+        header.headerSize = 227US
+        header.dataOffset = 227UL
+      end
+      1: begin
+        header.globalEncoding = 0US
+        header.headerSize = 227US
+        header.dataOffset = 227UL
+      end
+      2: begin
+        header.globalEncoding = 1US
+        header.headerSize = 227US
+        header.dataOffset = 227UL
+      end
+      3: begin
+        header.globalEncoding = 128US
+        header.headerSize = 235US
+        header.dataOffset = 235UL
+      end
+    endcase
     
     if (n_tags(records) gt 0) then begin
       header.dataOffset += total(records.recordLength, /int) + 54B * n_elements(records)
@@ -165,12 +180,8 @@ pro WriteLAS, outputFile, header, data, records=records, check=check, nodata=nod
     endfor
   endif
   
-  ; If necessary, write the point data start signature
-  if (header.versionMinor eq 0) then begin
-    writeu, outputLun, bytarr(2)
-  endif else begin
-    point_lun, outputLun, header.dataOffset
-  endelse
+  ; Move to the start of the data
+  point_lun, outputLun, header.dataOffset
   
   ; Unless the NODATA flag is set, write the data
   if ~ keyword_set(nodata) then begin
@@ -179,7 +190,7 @@ pro WriteLAS, outputFile, header, data, records=records, check=check, nodata=nod
     writeu, outputLun, data
     
     ; Write the waveform data
-    if (pointFormat ge 4) then begin
+    if (header.pointFormat ge 4) then begin
       if (header.wdp gt 0) then begin
       
         ; Write extended length variable record

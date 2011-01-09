@@ -129,10 +129,10 @@ FUNCTION SurfaceInterpolate, tileStruct, col_n, row_n, method, resolution, null,
       northing = all_data[findex].y * header.yScale + header.yOffset
       case string(header.systemID) of
         'Height: Source': begin
-          zvalue = all_data[findex].(8) * 0.01
+          zvalue = all_data[findex].source * 0.01
         end
         'Height: Elev': begin
-          zvalue = all_data[findex].(2) * header.zScale + header.zOffset
+          zvalue = all_data[findex].z * header.zScale + header.zOffset
         end
       endcase
       myDelVar, all_data

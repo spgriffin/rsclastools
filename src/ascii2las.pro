@@ -96,7 +96,7 @@ PRO Ascii2LAS, infile, columns, delimiter, limit, skipline, class
     fparts = strsplit(infile[i], '.', /extract)
     outputFile = fparts[0] + '.las'
     las_data = InitDataLAS(pointFormat=3)
-    outputHeader = InitHeaderLAS(pointFormat=3)
+    outputHeader = InitHeaderLAS(pointFormat=3,versionMinor=3)
     outputHeader.systemID = byte('ASCII import')
     outputHeader.xScale = 0.01D
     outputHeader.yScale = 0.01D
@@ -170,19 +170,19 @@ PRO Ascii2LAS, infile, columns, delimiter, limit, skipline, class
         
         ; Write time stamp of first return
         if (columns[0] eq -1) then begin
-          las_data.(9) = (time + 0.001D)
+          las_data.time = (time + 0.001D)
           offset = 1
         endif else begin
-          las_data.(9) = double(lparts[columns[0]])
+          las_data.time = double(lparts[columns[0]])
           offset = 0
         endelse
         
         ; Write first return
         if (nparts ge no_fields) then begin ; the case when all fields are present for that line
-          las_data.(0) = long(lparts[columns[1]] / 0.01D)
-          las_data.(1) = long(lparts[columns[2]] / 0.01D)
-          las_data.(2) = long(lparts[columns[3]] / 0.01D)
-          if (columns[4] ne -1) then las_data.(3) = long(lparts[columns[4]])
+          las_data.x = long(lparts[columns[1]] / 0.01D)
+          las_data.y = long(lparts[columns[2]] / 0.01D)
+          las_data.z = long(lparts[columns[3]] / 0.01D)
+          if (columns[4] ne -1) then las_data.inten= long(lparts[columns[4]])
           singular_test = 0
           outputHeader.xMin <= double(lparts[columns[1]])
           outputHeader.xMax >= double(lparts[columns[1]])
@@ -192,10 +192,10 @@ PRO Ascii2LAS, infile, columns, delimiter, limit, skipline, class
           outputHeader.zMax >= double(lparts[columns[3]])
         endif else begin ; the case for singular returns for a line amongst > 1 return lines.
           if (columns[3] lt columns[7]) then begin ; line order first then last returns
-            las_data.(0) = long(lparts[columns[1]] / 0.01D)
-            las_data.(1) = long(lparts[columns[2]] / 0.01D)
-            las_data.(2) = long(lparts[columns[3]] / 0.01D)
-            if (columns[4] ne -1) then las_data.(3) = long(lparts[columns[4]])
+            las_data.x = long(lparts[columns[1]] / 0.01D)
+            las_data.y = long(lparts[columns[2]] / 0.01D)
+            las_data.z = long(lparts[columns[3]] / 0.01D)
+            if (columns[4] ne -1) then las_data.inten = long(lparts[columns[4]])
             outputHeader.xMin <= double(lparts[columns[1]])
             outputHeader.xMax >= double(lparts[columns[1]])
             outputHeader.yMin <= double(lparts[columns[2]])
@@ -203,10 +203,10 @@ PRO Ascii2LAS, infile, columns, delimiter, limit, skipline, class
             outputHeader.zMin <= double(lparts[columns[3]])
             outputHeader.zMax >= double(lparts[columns[3]])
           endif else begin ; line order last then first returns
-            las_data.(0) = long(lparts[columns[5]] / 0.01D)
-            las_data.(1) = long(lparts[columns[6]] / 0.01D)
-            las_data.(2) = long(lparts[columns[7]] / 0.01D)
-            if (columns[8] ne -1) then las_data.(3) = long(lparts[columns[8]])
+            las_data.x = long(lparts[columns[5]] / 0.01D)
+            las_data.y = long(lparts[columns[6]] / 0.01D)
+            las_data.z = long(lparts[columns[7]] / 0.01D)
+            if (columns[8] ne -1) then las_data.inten = long(lparts[columns[8]])
             outputHeader.xMin <= double(lparts[columns[5]])
             outputHeader.xMax >= double(lparts[columns[5]])
             outputHeader.yMin <= double(lparts[columns[6]])
@@ -218,26 +218,26 @@ PRO Ascii2LAS, infile, columns, delimiter, limit, skipline, class
         endelse
         
         ; Write classification of it exists
-        if (class ne 0) then las_data.(5) = byte(class)
+        if (class ne 0) then las_data.class = byte(class)
         
         ; Write return types information
         if ((columns[7] eq -1) or (singular_test eq 1)) then begin ; Single return
-          las_data.(4) = swap_endian(9B, /swap_if_big_endian) ; reads, '00001001', value, format='(B)'
+          las_data.nreturn = swap_endian(9B, /swap_if_big_endian) ; reads, '00001001', value, format='(B)'
           writeu, outputLun, las_data
           outputHeader.nReturns[0]++
           outputHeader.nPoints++
         endif else begin ; Multiple return
           elev_diff = abs(float(lparts[columns[3]]) - float(lparts[columns[7]]))
           if (elev_diff GE limit) then begin ; Two returns
-            las_data.(4) = swap_endian(17B, /swap_if_big_endian) ; reads, '00010001', value, format='(B)'
+            las_data.nreturn = swap_endian(17B, /swap_if_big_endian) ; reads, '00010001', value, format='(B)'
             writeu, outputLun, las_data
             outputHeader.nReturns[0]++
             outputHeader.nPoints++
-            las_data.(0) = long(lparts[columns[5]] / 0.01D)
-            las_data.(1) = long(lparts[columns[6]] / 0.01D)
-            las_data.(2) = long(lparts[columns[7]] / 0.01D)
-            if (columns[8] ne -1) then las_data.(3) = long(lparts[columns[8]])
-            las_data.(4) = swap_endian(18B, /swap_if_big_endian) ; reads, '00010010', value, format='(B)'
+            las_data.x = long(lparts[columns[5]] / 0.01D)
+            las_data.y = long(lparts[columns[6]] / 0.01D)
+            las_data.z = long(lparts[columns[7]] / 0.01D)
+            if (columns[8] ne -1) then las_data.inten = long(lparts[columns[8]])
+            las_data.nreturn = swap_endian(18B, /swap_if_big_endian) ; reads, '00010010', value, format='(B)'
             writeu, outputLun, las_data
             outputHeader.nReturns[1]++
             outputHeader.nPoints++
@@ -248,7 +248,7 @@ PRO Ascii2LAS, infile, columns, delimiter, limit, skipline, class
             outputHeader.zMin <= double(lparts[columns[7]])
             outputHeader.zMax >= double(lparts[columns[7]])
           endif else begin ; Singular return
-            las_data.(4) = swap_endian(9B, /swap_if_big_endian) ; reads, '00001001', value, format='(B)'
+            las_data.nreturn = swap_endian(9B, /swap_if_big_endian) ; reads, '00001001', value, format='(B)'
             writeu, outputLun, las_data
             outputHeader.nReturns[0]++
             outputHeader.nPoints++

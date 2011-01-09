@@ -71,53 +71,44 @@
 ;
 ;###########################################################################
 
-function InitHeaderLAS, pointFormat=pointFormat
+function InitHeaderLAS, pointFormat=pointFormat, versionMinor=versionMinor
 
   compile_opt idl2
-  if not keyword_set(pointFormat) then pointFormat = 3
-  case pointFormat of
+  if (n_elements(versionMinor) eq 0) then versionMinor = 2
+  if (n_elements(pointFormat) eq 0) then pointFormat = 3
+  
+  ; versionMinor specifics
+  case versionMinor of
     0: begin
-      minorFormat = 0
-      pointLength = 20US
+      globalEncoding = 0US
       headerSize = 227US
       dataOffset = 227UL
-      globalEncoding = 0US
     end
     1: begin
-      minorFormat = 1
-      pointLength = 28US
+      globalEncoding = 0US
       headerSize = 227US
       dataOffset = 227UL
-      globalEncoding = 0US
     end
     2: begin
-      minorFormat = 2
-      pointLength = 26US
+      globalEncoding = 1US
       headerSize = 227US
       dataOffset = 227UL
-      globalEncoding = 1US
     end
     3: begin
-      minorFormat = 2
-      pointLength = 34US
-      headerSize = 227US
-      dataOffset = 227UL
-      globalEncoding = 1US
-    end
-    4: begin
-      minorFormat = 3
-      pointLength = 57US
+      globalEncoding = 128US
       headerSize = 235US
       dataOffset = 235UL
-      globalEncoding = 128US
     end
-    5: begin
-      minorFormat = 3
-      pointLength = 63US
-      headerSize = 235US
-      dataOffset = 235UL
-      globalEncoding = 128US
-    end
+  endcase
+  
+  ; pointFormat specifics
+  case pointFormat of
+    0: pointLength = 20US
+    1: pointLength = 28US
+    2: pointLength = 26US
+    3: pointLength = 34US
+    4: pointLength = 57US
+    5: pointLength = 63US
   endcase
   
   ; Define the public header structure
@@ -130,7 +121,7 @@ function InitHeaderLAS, pointFormat=pointFormat
     guid3           : 0US,  $                       ; Project ID - GUID data 3
     guid4           : bytarr(8), $                  ; Project ID - GUID data 4
     versionMajor    : 1B, $                         ; Version major
-    versionMinor    : byte(minorFormat), $          ; Version minor
+    versionMinor    : byte(versionMinor), $          ; Version minor
     systemID        : bytarr(32), $                 ; System identifier
     softwareID      : bytarr(32), $                 ; Generating software
     day             : 0US,    $                     ; File creation day of year

@@ -87,7 +87,8 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
   ; Regularise the grid
   ;counts = hist2d_rilidar(easting,northing,ri,n_cols,n_rows,BIN1=cell_size,BIN2=cell_size, $
   ;  MIN1=min(easting),MIN2=min(northing),MAX1=max(easting),MAX2=max(northing))
-  v = reform(transpose([[easting], [northing]]),2,n_elements(elevation))
+  v = transpose([[easting], [northing]])
+  ;v = reform(transpose([[easting], [northing]]),2,n_elements(elevation))
   counts = hist_nd(v, cell_size, reverse_indices=ri, /omit_upper, $
       min=[min(easting),min(northing)], max=[max(easting),max(northing)])
   
@@ -98,7 +99,7 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
   null_flag = elevation_grid EQ -1.0
   null_index = where(null_flag EQ 1,null_index_count,complement=real_index)
   wflag = elevation_grid*0.0
-  elevation_grid[null_index] = 0.0
+  if (null_index_count GT 0) then elevation_grid[null_index] = 0.0
   
   ; Determine the maximum elevation difference threshold
   dhmax = max(elevation_grid[real_index])-min(elevation_grid[real_index])
@@ -135,7 +136,7 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
             temp_grid = convol(elevation_grid,kernel,/center,/edge_truncate)
           endelse
           Zf = (temp_grid < Zf) + (temp_grid EQ 0.0) * Zf
-          Zf[null_index] = 0.0
+          if (null_index_count GT 0) then Zf[null_index] = 0.0
         endif
       endfor
       
@@ -153,7 +154,7 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
             temp_grid = convol(Zf,kernel,/center,/edge_truncate)
           endelse
           Z = temp_grid > Z
-          Z[null_index] = 0.0
+          if (null_index_count GT 0) then Z[null_index] = 0.0
         endif
       endfor
       
@@ -191,7 +192,7 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
   ; Detect ground data points omitted in the grid regularisation
   idx1 = where(class EQ 0, cnt1)
   idx2 = where(class EQ 2, cnt2)
-  if (cnt1 GT 0) then begin
+  if ((cnt1 GT 0) and (cnt2 ge 3)) then begin
     triangulate, easting[idx2], northing[idx2], triangles
     elev_temp = griddata(easting[idx2], northing[idx2], elevation[idx2], method='NaturalNeighbor', $
       triangles=triangles, xout=easting[idx1], yout=northing[idx1])

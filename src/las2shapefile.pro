@@ -148,10 +148,10 @@ PRO LAS2Shapefile, infile, columns, null, splitsize=splitsize
       if (columns[3] EQ 1) then begin
         case string(header.systemID) of
           'Height: Source': begin
-            height = data.(8) * 0.01
+            height = data.source * 0.01
           end
           'Height: Elev': begin
-            height = data.(2) * header.zScale + header.zOffset
+            height = data.z * header.zScale + header.zOffset
           end
           else: begin
             progressBar->Destroy

@@ -132,7 +132,7 @@ FUNCTION CanopyMetric, data, height, first, last, single, productType, returnTyp
     end
     'Fractional Cover - Intensity Ratio': begin ; Intensity Fractional Cover
       if (count GT 0) then begin
-        iFC = HeightProfile(height[index], data[index].(3), first[index], null, interval, height_threshold, $
+        iFC = HeightProfile(height[index], data[index].inten, first[index], null, interval, height_threshold, $
           rhovg_method, rhovg_percentile, counts, locations, rhov_rhog, constant)
         if (n_elements(iFC) GT 1) then begin
           iFC = reverse(total(reverse(iFC), /cumulative))
@@ -179,14 +179,14 @@ FUNCTION CanopyMetric, data, height, first, last, single, productType, returnTyp
     end
     'Height Percentile - Intensity': begin ; Percentile height (intensity)
       if (count GT 0) then begin
-        metric = GetPercentile(height[index], percentile, intensity=data[index].(3), method='Intensity')
+        metric = GetPercentile(height[index], percentile, intensity=data[index].inten, method='Intensity')
       endif else begin
         metric = null
       endelse
     end
     'Height Percentile - Cover (Counts)': begin ; Percentile height (cover)
       if (count GT 0) then begin
-        metric = GetPercentile(height[index], percentile, intensity=data[index].(3), binsize=vbinsize, method='Cover (Counts)')
+        metric = GetPercentile(height[index], percentile, intensity=data[index].inten, binsize=vbinsize, method='Cover (Counts)')
       endif else begin
         metric = null
       endelse

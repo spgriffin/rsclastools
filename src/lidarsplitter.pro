@@ -142,17 +142,17 @@ PRO LidarSplitter, infile, no_splits, buffer, flag=flag
       
       outputHeader.nPoints = nPoints
       outputHeader.nReturns = histogram(ishft(ishft(outData.nreturn,5),-5), min=1, max=5)
-      outputHeader.xMin = min(outData.(0)) * las_header.xScale + las_header.xOffset
-      outputHeader.xMax = max(outData.(0)) * las_header.xScale + las_header.xOffset
-      outputHeader.yMin = min(outData.(1)) * las_header.yScale + las_header.yOffset
-      outputHeader.yMax = max(outData.(1)) * las_header.yScale + las_header.yOffset
-      outputHeader.zMin = min(outData.(2)) * las_header.zScale + las_header.zOffset
-      outputHeader.zMax = max(outData.(2)) * las_header.zScale + las_header.zOffset
+      outputHeader.xMin = min(outData.x) * las_header.xScale + las_header.xOffset
+      outputHeader.xMax = max(outData.x) * las_header.xScale + las_header.xOffset
+      outputHeader.yMin = min(outData.y) * las_header.yScale + las_header.yOffset
+      outputHeader.yMax = max(outData.y) * las_header.yScale + las_header.yOffset
+      outputHeader.zMin = min(outData.z) * las_header.zScale + las_header.zOffset
+      outputHeader.zMax = max(outData.z) * las_header.zScale + las_header.zOffset
       if (total(outputHeader.nReturns) NE outputHeader.nPoints) then begin
         outputHeader.nReturns[0] += (outputHeader.nPoints - total(outputHeader.nReturns))
       endif
       
-      WriteLAS, outputFile, outputHeader, outData, pointFormat=outputHeader.pointFormat
+      WriteLAS, outputFile, outputHeader, outData
       
       ; Update progress bar
       bcount += 1

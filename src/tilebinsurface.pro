@@ -101,7 +101,7 @@ PRO TileBinSurface, lasfiles, resolution=resolution, zone=zone, tilesize=tilesiz
     'Statistic': if not keyword_set(productOptions) then productOptions = {method:'Maximum',returnType:'All',field:'Height',class:'All'}
     'Canopy Metric': begin
       if not keyword_set(productOptions) then productOptions = {method:'Fractional Cover - Count Ratio', field:'Height', returnType:'First', class:'All', $
-        height_threshold:0.5, weights:[1.0,0.75,0.5], percentile:0.99, rhovg_method:1, $
+        height_threshold:0.5, weights:[1.0,1.0,0.5], percentile:0.99, rhovg_method:1, $
         rhovg_percentile:0.99, constant:0.62, height_threshold_top:100.0, vbinsize:0.15}
     end
     'Terrain Metric': if not keyword_set(productOptions) then productOptions = {method:'Slope',returnType:'All',field:'Elevation',class:'Ground'}
