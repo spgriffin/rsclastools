@@ -1,5 +1,12 @@
 = RSC LAS Tools Modification History =
 
+==Version 1.5 - 7/1/2011==
+  * Changed calculation of cumulative gap fraction
+  * Fixed bug where incorrect height above ground data was read when generating point ASCII products
+  * Fix bug where not all applicable pointFormat versions were recognised for each LAS version. This will solve a problem a number of people have run into.
+  * Removed deprecated routines from source code
+  * Started using sample LAS data from liblas website for testing.
+
 ==Version 1.4 - 6/1/2011==
   * Corrected calculation of apparent foliage profiles
   * Fixed bug where incorrect minX and minY header values were assigned during tiling
