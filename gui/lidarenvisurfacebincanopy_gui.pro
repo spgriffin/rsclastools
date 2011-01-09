@@ -138,7 +138,7 @@ PRO LidarENVISurfaceBinCanopy_GUI
   ; Create the widget that will record the user parameters
   infile_bn = FILE_BASENAME(inFile)
   infile_dn = FILE_DIRNAME(inFile)
-  text = WIDGET_LABEL(tlb, value='Selected LAS Files (double-click to edit bounds)', frame=0, /align_center)
+  text = WIDGET_LABEL(tlb, value='Selected LAS Files. Check the bounds for errors.', frame=0, /align_center)
   wTree = WIDGET_TREE(tlb)
   wtRoot = WIDGET_TREE(wTree, VALUE=infile_dn[0], /FOLDER, /EXPANDED)
   file_bm = replicate(0B,16,16,3)
