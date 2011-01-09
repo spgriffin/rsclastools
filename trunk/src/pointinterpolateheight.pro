@@ -102,9 +102,9 @@ PRO PointInterpolateHeight, tileStruct, col_n, row_n, method, null, min_points, 
   gindex = where(gnd EQ 1, gcount, complement=vindex, ncomplement=vcount)
   
   ; Do interpolation
-  easting = all_data[gindex].(0) * header.xScale + header.xOffset
-  northing = all_data[gindex].(1) * header.yScale + header.yOffset
-  zdata = all_data[gindex].(2) * header.zScale + header.zOffset
+  easting = all_data[gindex].x* header.xScale + header.xOffset
+  northing = all_data[gindex].y * header.yScale + header.yOffset
+  zdata = all_data[gindex].z * header.zScale + header.zOffset
   grid_input, easting, northing, zdata, easting, northing, zdata
   triangulate, easting, northing, triangles
   
@@ -114,33 +114,33 @@ PRO PointInterpolateHeight, tileStruct, col_n, row_n, method, null, min_points, 
       'NearestNeighbor': begin
         outData = griddata(easting, northing, $
           zdata, method=method, triangles=triangles, missing=null, $
-          xout=all_data[vindex].(0) * header.xScale + header.xOffset, yout=all_data[veg_idx].(1) * header.yScale + header.yOffset)
+          xout=all_data[vindex].x * header.xScale + header.xOffset, yout=all_data[veg_idx].y * header.yScale + header.yOffset)
       end
       'Linear': begin
         outData = griddata(easting, northing, $
           zdata, method=method, triangles=triangles, missing=null, $
-          xout=all_data[vindex].(0) * header.xScale + header.xOffset, yout=all_data[veg_idx].(1) * header.yScale + header.yOffset)
+          xout=all_data[vindex].x * header.xScale + header.xOffset, yout=all_data[veg_idx].y * header.yScale + header.yOffset)
       end
       'InverseDistance': begin
         outData = griddata(easting, northing, $
           zdata, power=power, method=method, triangles=triangles, min_points=min_points, missing=null, sectors=sectors, empty_sectors=1, $
-          xout=all_data[vindex].(0) * header.xScale + header.xOffset, yout=all_data[veg_idx].(1) * header.yScale + header.yOffset, smoothing=smoothing)
+          xout=all_data[vindex].x * header.xScale + header.xOffset, yout=all_data[veg_idx].y * header.yScale + header.yOffset, smoothing=smoothing)
       end
       'NaturalNeighbor': begin
         outData = griddata(easting, northing, $
           zdata, method=method, triangles=triangles, missing=null, $
-          xout=all_data[vindex].(0) * header.xScale + header.xOffset, yout=all_data[vindex].(1) * header.yScale + header.yOffset)
+          xout=all_data[vindex].x * header.xScale + header.xOffset, yout=all_data[vindex].y * header.yScale + header.yOffset)
       end
       'PolynomialRegression': begin
         outData = griddata(easting, northing, $
           zdata, power=power, method=method, triangles=triangles, min_points=min_points, missing=null, sectors=sectors, empty_sectors=1, $
-          xout=all_data[vindex].(0) * header.xScale + header.xOffset, yout=all_data[vindex].(1) * header.yScale + header.yOffset)
+          xout=all_data[vindex].x * header.xScale + header.xOffset, yout=all_data[vindex].y * header.yScale + header.yOffset)
       end
     endcase
     
     ; Calculate height
     height = fltarr(nPoints)
-    height[vindex] = (all_data[vindex].(2) * header.zScale + header.zOffset) - outData
+    height[vindex] = (all_data[vindex].z * header.zScale + header.zOffset) - outData
     height = temporary(height) > 0.0
     
   endif else begin
@@ -158,13 +158,13 @@ PRO PointInterpolateHeight, tileStruct, col_n, row_n, method, null, min_points, 
   ReadLAS, outFile, header, data
   case outputType of
     0: begin ; Point source ID
-      data.(8) = 0L
-      data.(8) = long(height[cindex] / 0.01D)
+      data.source = 0L
+      data.source = long(height[cindex] / 0.01D)
       header.systemID = 0B
       header.systemID = byte('Height: Source')
     end
     1: begin ; Elevation
-      data.(2) = long(height[cindex] / 0.01D)
+      data.z = long(height[cindex] / 0.01D)
       header.systemID = 0B
       header.systemID = byte('Height: Elev')
     end

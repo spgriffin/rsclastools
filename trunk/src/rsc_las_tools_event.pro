@@ -107,8 +107,6 @@ PRO RSC_LAS_Tools_Event, event
       
       'ChangeBounds': changebounds_start, event
       
-      'Visualise': Visualize3D
-      
       'About': begin
         Widget_Control, event.top, Get_UValue=info
         About_GUI, info.tlb
@@ -140,9 +138,6 @@ PRO RSC_LAS_Tools_Event, event
       'BoundsShapefile': BoundsShapefile_GUI
       'StartBoundsShapefile': BoundsShapefile_start, event
       
-      'ElevFilter': LidarFilter_GUI
-      'StartFilter': Filter_start, event
-      
       'TileGroundFilter': TileGroundFilter_GUI
       'StartTileGroundFilter': TileGroundFilter_start, event
       
@@ -161,20 +156,8 @@ PRO RSC_LAS_Tools_Event, event
       'ExtractSite': ExtractSite_GUI
       'StartExtractSite': ExtractSite_start, event
       
-      'InterpRaster': LidarInterpolate_GUI
-      'StartInterpRaster': InterpRaster_start, event
-      
       'FoliageProfile': FoliageProfile_GUI
       'StartFoliageProfile': FoliageProfile_start, event
-      
-      'Bin_CanopyMetrics': LidarBin_CanopyMetrics_GUI
-      'StartBin_CanopyMetrics': Bin_CanopyMetrics_start, event
-      
-      'Bin_TerrainMetrics': LidarBin_TerrainMetrics_GUI
-      'StartBin_TerrainMetrics': Bin_TerrainMetrics_start, event
-      
-      'Bin_ProfileStatistics': LidarBin_ProfileStatistics_GUI
-      'StartBin_ProfileStatistics': Bin_ProfileStatistics_start, event
       
       'Point_CanopyMetrics': LidarPoint_CanopyMetrics_GUI
       'StartPoint_CanopyMetrics': Point_CanopyMetrics_start, event
@@ -184,9 +167,6 @@ PRO RSC_LAS_Tools_Event, event
       
       'Point_ProfileStatistics': LidarPoint_ProfileStatistics_GUI
       'StartPoint_ProfileStatistics': Point_ProfileStatistics_start, event
-      
-      'Point_CalcHeights': LidarPoint_CalcHeights_GUI
-      'StartPoint_CalcHeights': Point_CalcHeights_start, event
       
       'TilePointInterpHeights': TilePointInterpHeights_GUI
       'StartTilePointInterpHeights': TilePointInterpHeights_start, event

@@ -113,33 +113,36 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
   outputHeader.yMax = -10e6
   outputHeader.zMax = -10e6
   outputHeader.nRecords = 0
-  case outputHeader.pointFormat of
+  case outputHeader.versionMinor of
     0: begin
+      outputHeader.globalEncoding = 0US
       outputHeader.headerSize = 227US
-      outputHeader.dataOffset = 229UL
+      outputHeader.dataOffset = 227UL
     end
     1: begin
+      outputHeader.globalEncoding = 0US
       outputHeader.headerSize = 227US
       outputHeader.dataOffset = 227UL
     end
     2: begin
+      outputHeader.globalEncoding = 1US
       outputHeader.headerSize = 227US
       outputHeader.dataOffset = 227UL
     end
     3: begin
-      outputHeader.headerSize = 227US
-      outputHeader.dataOffset = 227UL
-    end
-    4: begin
+      outputHeader.globalEncoding = 128US
       outputHeader.headerSize = 235US
       outputHeader.dataOffset = 235UL
       outputHeader.wdp = 0LL
     end
-    5: begin
-      outputHeader.headerSize = 235US
-      outputHeader.dataOffset = 235UL
-      outputHeader.wdp = 0LL
-    end
+  endcase
+  case outputHeader.pointFormat of
+    0: outputHeader.pointLength = 20US
+    1: outputHeader.pointLength = 28US
+    2: outputHeader.pointLength = 26US
+    3: outputHeader.pointLength = 34US
+    4: outputHeader.pointLength = 57US
+    5: outputHeader.pointLength = 63US
   endcase
   date = bin_date(systime(/utc))
   day = julday(date[1],date[2],date[0]) - julday(1,1,date[0]) + 1
@@ -156,7 +159,7 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
     tileymin[i] = yDiv * dims[1] + floor(masterHeader.yMin)
     tileCol[i] = dims[0] + 1
     tileRow[i] = dims[1] + 1
-    WriteLAS, outputFiles[i], outputHeader, /nodata, pointFormat=outputHeader.pointFormat
+    WriteLAS, outputFiles[i], outputHeader, /nodata
   endfor
   
   ; Loop through each las file
@@ -189,15 +192,15 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
       endfor
       
       ; Define which tile each return is in
-      tileCoord = ncol * (0L > floor(((tempData.(1) * las_header.yScale + las_header.yOffset) - floor(masterHeader.yMin)) / yDiv) < (nrow - 1L)) $
-        + (0L > floor(((tempData.(0) * las_header.xScale + las_header.xOffset) - floor(masterHeader.xMin)) / xDiv) < (ncol - 1L))
+      tileCoord = ncol * (0L > floor(((tempData.y * las_header.yScale + las_header.yOffset) - floor(masterHeader.yMin)) / yDiv) < (nrow - 1L)) $
+        + (0L > floor(((tempData.x * las_header.xScale + las_header.xOffset) - floor(masterHeader.xMin)) / xDiv) < (ncol - 1L))
       data_bin = histogram(tileCoord, min=0L, max=nTiles-1L, reverse_indices=ri)
       
       ; Make sure scaling and offsets are consistent for all tiles
       if (nFiles GT 1) then begin
-        tempData.(0) = ((tempData.(0) * las_header.xScale + las_header.xOffset) - outputHeader.xOffset) / outputHeader.xScale
-        tempData.(1) = ((tempData.(1) * las_header.yScale + las_header.yOffset) - outputHeader.yOffset) / outputHeader.yScale
-        tempData.(2) = ((tempData.(2) * las_header.zScale + las_header.zOffset) - outputHeader.zOffset) / outputHeader.zScale
+        tempData.x = long(((tempData.x * las_header.xScale + las_header.xOffset) - outputHeader.xOffset) / outputHeader.xScale)
+        tempData.y = long(((tempData.y * las_header.yScale + las_header.yOffset) - outputHeader.yOffset) / outputHeader.yScale)
+        tempData.z = long(((tempData.z * las_header.zScale + las_header.zOffset) - outputHeader.zOffset) / outputHeader.zScale)
       endif
       
       ; Write the returns to their correct tile
@@ -212,9 +215,9 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
           temp_header.xMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].x) * outputHeader.xScale + outputHeader.xOffset) > temp_header.xMax
           temp_header.yMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].y) * outputHeader.yScale + outputHeader.yOffset) > temp_header.yMax
           temp_header.zMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].z) * outputHeader.zScale + outputHeader.zOffset) > temp_header.zMax
-          temp_header.xMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].x) * outputHeader.xScale + outputHeader.xOffset) < temp_header.xMax
-          temp_header.yMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].y) * outputHeader.yScale + outputHeader.yOffset) < temp_header.yMax
-          temp_header.zMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].z) * outputHeader.zScale + outputHeader.zOffset) < temp_header.zMax
+          temp_header.xMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].x) * outputHeader.xScale + outputHeader.xOffset) < temp_header.xMin
+          temp_header.yMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].y) * outputHeader.yScale + outputHeader.yOffset) < temp_header.yMin
+          temp_header.zMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].z) * outputHeader.zScale + outputHeader.zOffset) < temp_header.zMin
           point_lun, outputLun, 0
           writeu, outputLun, temp_header
           free_lun, outputLun

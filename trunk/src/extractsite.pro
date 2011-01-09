@@ -74,8 +74,6 @@
 ;###########################################################################
 
 PRO ExtractSite, infile, shape, name, easting, northing, major_axis, minor_axis, azimuth
-
-  FORWARD_FUNCTION InitHeaderLAS
   
   ; Start progress bar
   bcount = 0
@@ -106,14 +104,31 @@ PRO ExtractSite, infile, shape, name, easting, northing, major_axis, minor_axis,
   if (count2 GT 0) then azimuth[index2] = (temporary(azimuth[index2]) + 90.0) * !PI / 180.0
   
   ; Loop through each input file
+  nSites = n_elements(name)
   for i = 0L, n_elements(infile)-1L do begin
   
-    ; If there are no sites within the bounds of this LAS file, then skip
+    ; If there are no sites remotely within the bounds of this LAS file, then skip
+    ; Need to do bounds in case of site bounds being bigger than las bounds
     ReadHeaderLAS, infile[i], header
     px = [header.xMin,header.xMax,header.xMax,header.xMin]
     py = [header.yMax,header.yMax,header.yMin,header.yMin]
     inside = Obj_New('IDLanROI', px, py)
-    inside_index = inside->ContainsPoints(easting, northing)
+    iwidth = header.xMax - header.xMin
+    ilength = header.yMax - header.yMin
+    inside_index = lonarr(nSites)
+    gt_index = lonarr(nSites)
+    for j = 0L, n_elements(name)-1L do begin
+      if (iwidth gt major_axis[j] and iwidth gt major_axis[j]) then begin
+        inside_index[j] = inside->ContainsPoints(easting[j],northing[j])
+      endif else begin
+        px_p = [easting[j]-major_axis[j]/2.0,easting[j]+major_axis[j]/2.0,easting[j]+major_axis[j]/2.0,easting[j]-major_axis[j]/2.0]
+        py_p = [northing[j]+major_axis[j]/2.0,northing[j]+major_axis[j]/2.0,northing[j]-major_axis[j]/2.0,northing[j]-major_axis[j]/2.0]
+        inside_p = Obj_New('IDLanROI', px_p, py_p)
+        inside_index[j] = inside->ContainsPoints(header.xMax-iwidth/2.0,header.yMax-ilength/2.0)
+        Obj_Destroy, inside_p
+        gt_index[j] = 1
+      endelse
+    endfor
     index = where(inside_index gt 0, count)
     if (count gt 0) then begin
     
@@ -123,19 +138,19 @@ PRO ExtractSite, infile, shape, name, easting, northing, major_axis, minor_axis,
       progressBar -> SetProperty, text=strtrim(infile[i], 2)
       
       ; Loop through each extraction location
-      for j = 0L, n_elements(name)-1L do begin
+      for j = 0L, nSites-1L do begin
       
         ; Check if individual point is inside
         inside_index = inside->ContainsPoints(easting[j], northing[j])
-        if (inside_index[0] gt 0) then begin
+        if (inside_index[0] gt 0 or gt_index[j] eq 1) then begin
         
           ; Extract returns within radius/block
           case shape of
             1: begin ; Rectangle
-              x = ((data.(0) * header.xScale + header.xOffset) - easting[j]) * cos(azimuth[j]) - $
-                ((data.(1) * header.yScale + header.yOffset) - northing[j]) * sin(azimuth[j])
-              y = ((data.(0) * header.xScale + header.xOffset) - easting[j]) * sin(azimuth[j]) + $
-                ((data.(1) * header.yScale + header.yOffset) - northing[j]) * cos(azimuth[j])
+              x = ((data.x * header.xScale + header.xOffset) - easting[j]) * cos(azimuth[j]) - $
+                ((data.y * header.yScale + header.yOffset) - northing[j]) * sin(azimuth[j])
+              y = ((data.x * header.xScale + header.xOffset) - easting[j]) * sin(azimuth[j]) + $
+                ((data.y * header.yScale + header.yOffset) - northing[j]) * cos(azimuth[j])
               distancex = sqrt((x / major_axis[j])^2)
               distancey = sqrt((y / minor_axis[j])^2)
               index = where((distancex LE 1.0) AND (distancey LE 1.0), count)
@@ -146,10 +161,10 @@ PRO ExtractSite, infile, shape, name, easting, northing, major_axis, minor_axis,
               endelse
             end
             2: begin ; Ellipse
-              x = ((data.(0) * header.xScale + header.xOffset) - easting[j]) * cos(azimuth[j]) - $
-                ((data.(1) * header.yScale + header.yOffset) - northing[j]) * sin(azimuth[j])
-              y = ((data.(0) * header.xScale + header.xOffset) - easting[j]) * sin(azimuth[j]) + $
-                ((data.(1) * header.yScale + header.yOffset) - northing[j]) * cos(azimuth[j])
+              x = ((data.x * header.xScale + header.xOffset) - easting[j]) * cos(azimuth[j]) - $
+                ((data.y * header.yScale + header.yOffset) - northing[j]) * sin(azimuth[j])
+              y = ((data.x * header.xScale + header.xOffset) - easting[j]) * sin(azimuth[j]) + $
+                ((data.y * header.yScale + header.yOffset) - northing[j]) * cos(azimuth[j])
               distance = sqrt((x / major_axis[j])^2 + (y / minor_axis[j])^2)
               index = where(distance LE 1.0, count)
               if (count GT 0L) then begin
@@ -164,12 +179,12 @@ PRO ExtractSite, infile, shape, name, easting, northing, major_axis, minor_axis,
           
           ; Generate the header
           outputHeader = header
-          outputHeader.xMin = min(dataSub.(0)) * 0.01D
-          outputHeader.xMax = max(dataSub.(0)) * 0.01D
-          outputHeader.yMin = min(dataSub.(1)) * 0.01D
-          outputHeader.yMax = max(dataSub.(1)) * 0.01D
-          outputHeader.zMin = min(dataSub.(2)) * 0.01D
-          outputHeader.zMax = max(dataSub.(2)) * 0.01D
+          outputHeader.xMin = min(dataSub.x) * 0.01D
+          outputHeader.xMax = max(dataSub.x) * 0.01D
+          outputHeader.yMin = min(dataSub.y) * 0.01D
+          outputHeader.yMax = max(dataSub.y) * 0.01D
+          outputHeader.zMin = min(dataSub.z) * 0.01D
+          outputHeader.zMax = max(dataSub.z) * 0.01D
           outputHeader.nPoints = count
           outputHeader.nReturns = histogram([ishft(ishft(dataSub.nReturn,5),-5)], min=1, max=5)
           outputHeader.xScale = 0.01D
@@ -180,27 +195,33 @@ PRO ExtractSite, infile, shape, name, easting, northing, major_axis, minor_axis,
             0: begin
               outputHeader.headerSize = 227US
               outputHeader.dataOffset = 229UL
+              outputHeader.pointLength = 20US
             end
             1: begin
               outputHeader.headerSize = 227US
               outputHeader.dataOffset = 227UL
+              outputHeader.pointLength = 28US
             end
             2: begin
               outputHeader.headerSize = 227US
               outputHeader.dataOffset = 227UL
+              outputHeader.pointLength = 26US
             end
             3: begin
               outputHeader.headerSize = 227US
               outputHeader.dataOffset = 227UL
+              outputHeader.pointLength = 34US
             end
             4: begin
               outputHeader.headerSize = 235US
               outputHeader.dataOffset = 235UL
+              outputHeader.pointLength = 57US
               outputHeader.wdp = 0LL
             end
             5: begin
               outputHeader.headerSize = 235US
               outputHeader.dataOffset = 235UL
+              outputHeader.pointLength = 63US
               outputHeader.wdp = 0LL
             end
           endcase
@@ -210,7 +231,7 @@ PRO ExtractSite, infile, shape, name, easting, northing, major_axis, minor_axis,
           
           ; Write output
           outputFile = strtrim(fparts[0],2) + '_' + shape_name + '_' + strtrim(name[j],2) + '.' + fparts[1]
-          WriteLAS, outputFile, outputHeader, dataSub, pointFormat=outputHeader.pointFormat
+          WriteLAS, outputFile, outputHeader, dataSub
           
         endif
         

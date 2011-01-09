@@ -110,7 +110,7 @@ PRO TileGroundFilter, lasfiles, resolution=resolution, tilesize=tilesize, b_star
     fparts = strsplit(file_basename(lasfiles[j]), '.', /extract)
     outfile = filepath(strjoin([fparts[0],'Filtered.las'], '_'), root_dir=opath)
     las_input = lasfiles[j]
-    progressBar -> SetProperty, Text=strtrim(las_input,2)
+    progressBar->SetProperty, Text=strtrim(las_input,2)
     bcount = 0D
     progressbar->Update, 0D
     

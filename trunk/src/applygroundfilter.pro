@@ -98,10 +98,15 @@ PRO ApplyGroundFilter, tileStruct, col_n, row_n, b_start, bmax, dh0, $
   endfor
   
   ; Do the interpolation
-  class = GroundFilter(all_data.(0) * header.xScale + header.xOffset,all_data.(1) * header.yScale + header.yOffset, $
-    all_data.(2) * header.zScale + header.zOffset, b_start=b_start,bmax=bmax,dh0=dh0,slope=slope,cell_size=resolution, $
-    height_threshold=height_threshold)
-    
+  nPoints = n_elements(all_data)
+  if (nPoints ge 3) then begin
+    class = GroundFilter(all_data.x * header.xScale + header.xOffset,all_data.y * header.yScale + header.yOffset, $
+      all_data.z * header.zScale + header.zOffset, b_start=b_start,bmax=bmax,dh0=dh0,slope=slope,cell_size=resolution, $
+      height_threshold=height_threshold)
+  endif else begin
+    class = bytarr(nPoints)
+  endelse
+  
   ; Write output to file
   ReadLAS, outFile, header, data
   ; For the class field, bits 1-4 are the acctual classification (32 possible values)
@@ -113,7 +118,7 @@ PRO ApplyGroundFilter, tileStruct, col_n, row_n, b_start, bmax, dh0, $
   ;   reads, '00000001', value, format='(B)' - For ground (2) returns
   ;   reads, '00000010', value, format='(B)' - For unclassified (1) returns
   ;   class = ishft(ishft(byte(value),-4),4)
-  data.(5) = class[cindex]
-  WriteLAS, outFile, header, data, pointFormat=header.pointFormat
+  data.class = class[cindex]
+  WriteLAS, outFile, header, data
   
 END

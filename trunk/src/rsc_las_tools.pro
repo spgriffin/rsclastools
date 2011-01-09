@@ -101,7 +101,6 @@ PRO RSC_LAS_TOOLS
   importMenu = Widget_Button(fileMenu, Value='Import to LAS', /Menu)
   button = Widget_button(importMenu, Value='ASCII', UValue='Ascii2LAS')
   button = Widget_button(importMenu, Value='TLS PTS', UValue='Ascii2LAS_TLS')
-  ;button = Widget_Button(fileMenu, Value='"ENVI Lidar Tools" 3D Viewer', UValue='Visualise', /separator)
   button = Widget_Button(fileMenu, Value='Exit', UValue='Quit', /separator)
   
   mapMenu = Widget_Button(menuBase, Value='Map', /Menu)
@@ -129,17 +128,6 @@ PRO RSC_LAS_TOOLS
   button = Widget_Button(pointMenu, Value='Statistics', UValue='Point_ProfileStatistics')
   button = Widget_Button(pointMenu, Value='Canopy Metrics', UValue='Point_CanopyMetrics')
   button = Widget_Button(pointMenu, Value='Terrain Metrics', UValue='Point_TerrainMetrics')
-  
-  ;oldMenu = Widget_Button(menuBase, Value='Deprecated Stuff', /Menu)
-  ;ointerpMenu = Widget_Button(oldMenu, Value='Interpolation', /Menu)
-  ;button = Widget_Button(ointerpMenu, Value='Calculate Return Heights', UValue='Point_CalcHeights')
-  ;button = Widget_Button(ointerpMenu, Value='Interpolated GeoTIFF Products', UValue='InterpRaster')
-  ;oclassMenu = Widget_Button(oldMenu, Value='Classification', /Menu)
-  ;button = Widget_Button(oclassMenu, Value='Elevation Filter', UValue='ElevFilter')
-  ;gridMenu = Widget_button(oclassMenu, Value='Binned GeoTIFF Products', /Menu, /separator)
-  ;button = Widget_Button(gridMenu, Value='Statistics', UValue='Bin_ProfileStatistics')
-  ;button = Widget_Button(gridMenu, Value='Canopy Metrics', UValue='Bin_CanopyMetrics')
-  ;button = Widget_Button(gridMenu, Value='Terrain Metrics', UValue='Bin_TerrainMetrics')
 
   helpMenu = Widget_Button(menuBase, Value='Help', /Menu)
   button = Widget_Button(helpMenu, Value='Readme', UValue='About')

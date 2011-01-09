@@ -101,7 +101,7 @@ pro ReadLAS, inputFile, header, data, records=records, noData=noData, assocLun=a
   fInfo = file_info(inputFile)
   openr, inputLun, inputFile, /get_lun, /swap_if_big_endian
   readu, inputLun, header
-  if (header.pointFormat ge 4) then begin
+  if (header.versionMinor eq 3) then begin
     wdp = 0ULL
     readu, inputLun, wdp
     header = create_struct(header, 'wdp', wdp)
@@ -142,13 +142,8 @@ pro ReadLAS, inputFile, header, data, records=records, noData=noData, assocLun=a
   endelse
   
   
-  ; Read point data start signature if the file is in the LAS 1.0 format
-  if (header.versionMajor eq 1 and header.versionMinor eq 0) then begin
-    pointStart = bytarr(2)
-    readu, inputLun, pointStart
-  endif else begin
-    point_lun, inputLun, header.dataOffset
-  endelse
+  ; Move the start of data
+  point_lun, inputLun, header.dataOffset
   
   if ~ keyword_set(noData) then begin
   

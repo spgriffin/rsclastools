@@ -123,10 +123,10 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
     'Height': begin
       case string(header.systemID) of
         'Height: Source': begin
-          field = data.(8) * 0.01
+          field = data.source * 0.01
         end
         'Height: Elev': begin
-          field = data.(2) * header.zScale + header.zOffset
+          field = data.z * header.zScale + header.zOffset
         end
         else: begin
           errMsg = dialog_message('Point heights not calculated.', /error, title='TileBinSurface.pro')
@@ -134,15 +134,15 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
         end
       endcase
     end
-    'Elevation': field = data.(2) * header.zScale + header.zOffset
-    'Intensity': field = data.(3)
+    'Elevation': field = data.z * header.zScale + header.zOffset
+    'Intensity': field = data.inten
   endcase
   
   ; If the tile has the required data...
   if (count gt 0) then begin
   
     ; Contruct grid for binning, input is an NxP array representing P data points in N dimensions
-    v = transpose([[data[index].(0) * header.xScale + header.xOffset], [data[index].(1) * header.yScale + header.yOffset]])
+    v = transpose([[data[index].x * header.xScale + header.xOffset], [data[index].y * header.yScale + header.yOffset]])
     surf = float(hist_nd(reform(v,2,count), resolution, reverse_indices=ri, /omit_upper, $
       min=[tileStruct.xMin[tIndex[0]],tileStruct.yMin[tIndex[0]]], max=[tileStruct.xMax[tIndex[0]],tileStruct.yMax[tIndex[0]]]))
       
@@ -158,13 +158,13 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
             subfirst = filterReturns(data[index[ri[ri[i]:ri[i+1L]-1L]]], type=1, n=1)
             sublast = filterReturns(data[index[ri[ri[i]:ri[i+1L]-1L]]], type=2)
             subsingle = filterReturns(data[index[ri[ri[i]:ri[i+1L]-1L]]], type=7)
-            surf[i] = HeightCoverMetric(field[index[ri[ri[i]:ri[i+1L]-1L]]], intensity=data[index[ri[ri[i]:ri[i+1L]-1L]]].(3), $
+            surf[i] = HeightCoverMetric(field[index[ri[ri[i]:ri[i+1L]-1L]]], intensity=data[index[ri[ri[i]:ri[i+1L]-1L]]].inten, $
               productOptions, first=subfirst, last=sublast, single=subsingle, null=null)
           end
           'Terrain Metric': begin
-            surf[i] = TerrainMetric(data[index[ri[ri[i]:ri[i+1L]-1L]]].(2) * header.zScale + header.zOffset, $
-              data[index[ri[ri[i]:ri[i+1L]-1L]]].(0) * header.xScale + header.xOffset, $
-              data[index[ri[ri[i]:ri[i+1L]-1L]]].(1) * header.yScale + header.yOffset, $
+            surf[i] = TerrainMetric(data[index[ri[ri[i]:ri[i+1L]-1L]]].z * header.zScale + header.zOffset, $
+              data[index[ri[ri[i]:ri[i+1L]-1L]]].x * header.xScale + header.xOffset, $
+              data[index[ri[ri[i]:ri[i+1L]-1L]]].y * header.yScale + header.yOffset, $
               productOptions.method, null)
           end
         endcase

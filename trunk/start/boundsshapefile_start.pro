@@ -82,12 +82,18 @@ PRO BoundsShapefile_start, event
   zone = info.zone->Get_Value()
   hemisphere = info.hemi_droplist->GetSelection()
   Widget_Control, info.filetype, Get_Value=filetype
+  Widget_Control, info.boundstype, Get_Value=boundstype
   Widget_Control, event.top, /Destroy
   if (info.infile[0] EQ '') then return
   nFiles = n_elements(info.infile)
   for i = 0L, nFiles-1L, 1L do begin
-    ReadLAS, info.infile[i], las_header, las_data
-    ConvexHull, las_data.(0) * las_header.xScale + las_header.xOffset, las_data.(1) * las_header.yScale + las_header.yOffset, px, py
+    if (boundstype[0] eq 0) then begin
+      ReadLAS, info.infile[i], las_header, las_data
+      ConvexHull, las_data.x * las_header.xScale + las_header.xOffset, las_data.y * las_header.yScale + las_header.yOffset, px, py
+    endif else begin
+      ReadHeaderLAS, info.infile[i], las_header
+      ConvexHull, [las_header.xMin,las_header.xMax,las_header.xMax,las_header.xMin], [las_header.yMax,las_header.yMax,las_header.yMin,las_header.yMin], px, py
+    endelse
     fparts = strsplit(info.infile[i], '.', /extract)
     outfile = fparts[0] + '_extent'
     CreateBoundsShapefile, outfile, px, py, file_basename(info.infile[i]), kml=filetype, in_proj=in_proj, out_proj=out_proj, zone=zone, hemisphere=hemisphere

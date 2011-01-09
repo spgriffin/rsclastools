@@ -21,7 +21,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;       data = InitDataLAS(PointFormat=PointFormat)
+;       data = InitDataLAS(PointFormat)
 ;
 ;       The PointFormat specifies the requested format of the data record.
 ;
@@ -78,7 +78,7 @@ function InitDataLAS, pointFormat=pointFormat
   compile_opt idl2
   
   ; Define the data structure
-  if not keyword_set(pointFormat) then pointFormat = 3
+  if (n_elements(pointFormat) eq 0) then pointFormat = 3
   case pointFormat of
     0: begin
       data = {formatD0,  $
