@@ -6,6 +6,7 @@
   * Fixed a major bug in the data binning that resulted in tile edges being apparent in final products based on above-ground height
   * Modified raster generation code to allow multiple layer raster products (e.g. for foliage profiles)
   * Added a canopy density decile metric that may be useful for biomass estimation
+  * Fixed bug in creation of LAS extent KML files
 
 ==Version 1.5 - 7/1/2011==
   * Changed calculation of cumulative gap fraction
