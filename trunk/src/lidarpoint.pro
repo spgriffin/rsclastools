@@ -111,6 +111,9 @@ PRO LidarPoint, infile, ProductType, StatsType, $
       percentile_str = string(percentile*100.0,format='(I03)')
       product_name = percentile_str + product_name
     endif
+    if (p_parts[0] eq 'DensityDeciles') then begin
+      product_name = strcompress(strjoin('D'+string(lindgen(10),format='(I02)'),','),/remove_all)
+    endif
   endelse
   outputDir = file_dirname(infile[0], /mark_directory)
   returnType_str = strcompress(strjoin(strsplit(returnType, '()', /extract)), /remove_all)
@@ -234,7 +237,8 @@ PRO LidarPoint, infile, ProductType, StatsType, $
     endif
     
     ; Write the result to ASCII
-    line = [file_basename(infile[j]), string(value, format='(f9.3)'), strtrim(count, 2)]
+    valueStr = strjoin(string(value, format='(f9.3)'), ',')
+    line = [file_basename(infile[j]), valueStr, strtrim(count, 2)]
     line = strcompress(strjoin(line, ','), /remove_all)
     printf, lun, line
     

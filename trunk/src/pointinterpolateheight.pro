@@ -73,27 +73,47 @@
 ;
 ;###########################################################################
 
-PRO PointInterpolateHeight, tileStruct, col_n, row_n, method, null, min_points, sectors, smoothing, outputType
+FUNCTION PointInterpolateHeight, tileStruct, col_n, row_n, method, null, min_points, sectors, smoothing, outputType
 
   ; Keywords
   compile_opt idl2
-  forward_function filterReturns
+  forward_function filterReturns, InitDataLAS, filterReturns
   
-  ; Read tiles
+  ; Get size of tile neighbourhood
   nTiles = n_elements(tileStruct.name)
+  nPointsTotal = 0ULL
+  inNeighbourhood = intarr(nTiles)
+  inNeighbourhoodIndex = ulon64arr(nTiles)
   for i = 0L, nTiles-1L, 1L do begin
     if (tileStruct.empty[i] EQ 0) then begin
       cdiff = abs(tileStruct.col[i] - col_n)
       rdiff = abs(tileStruct.row[i] - row_n)
       if (cdiff LE 1 AND rdiff LE 1) then begin
-        ReadLAS, tileStruct.name[i], header, data
+        ReadHeaderLas, tileStruct.name[i], temp_header
+        inNeighbourhoodIndex[i] = nPointsTotal
+        nPointsTotal += temp_header.nPoints
         if (cdiff EQ 0 AND rdiff EQ 0) then begin
-          outFile = tileStruct.name[i]
-          cindex = ulindgen(header.nPoints) + n_elements(all_data)
-        endif
-        all_data = n_elements(all_data) EQ 0 ? temporary(data) : [temporary(all_data), temporary(data)]
+          inNeighbourhood[i] = 2
+        endif else begin
+          inNeighbourhood[i] = 1
+        endelse
       endif
     endif
+  endfor
+  
+  ; Read tile neighbourhood
+  dataStr = InitDataLAS(pointFormat=temp_header.pointFormat)
+  all_data = replicate(dataStr, nPointsTotal)
+  in_idx = where(inNeighbourhood gt 0, in_count)
+  for i = 0L, in_count-1L, 1L do begin
+    ReadLAS, tileStruct.name[in_idx[i]], header, data
+    if (inNeighbourhood[in_idx[i]] EQ 2) then begin
+      inFile = tileStruct.name[in_idx[i]]
+      fparts = strsplit(inFile, '.', /extract)
+      outFile = fparts[0] + '_AGH.las'
+      cindex = ul64indgen(header.nPoints) + inNeighbourhoodIndex[in_idx[i]]
+    endif
+    all_data[inNeighbourhoodIndex[in_idx[i]]:inNeighbourhoodIndex[in_idx[i]]+header.nPoints-1ULL] = temporary(data)
   endfor
   
   ; Get locations for interpolation
@@ -102,7 +122,7 @@ PRO PointInterpolateHeight, tileStruct, col_n, row_n, method, null, min_points, 
   gindex = where(gnd EQ 1, gcount, complement=vindex, ncomplement=vcount)
   
   ; Do interpolation
-  easting = all_data[gindex].x* header.xScale + header.xOffset
+  easting = all_data[gindex].x * header.xScale + header.xOffset
   northing = all_data[gindex].y * header.yScale + header.yOffset
   zdata = all_data[gindex].z * header.zScale + header.zOffset
   grid_input, easting, northing, zdata, easting, northing, zdata
@@ -149,13 +169,13 @@ PRO PointInterpolateHeight, tileStruct, col_n, row_n, method, null, min_points, 
     
   endelse
   
-  ; Sometime crazy interpolations occur at the edges
+  ; Sometime crazy interpolations occur at the edges where there is no buffer tile
   ; In these cases set the height value to null
   eindex = where(height GT 150.0, ecount)
   if (ecount GT 0) then height[eindex] = null
   
   ; Write output to file
-  ReadLAS, outFile, header, data
+  ReadLAS, inFile, header, data
   case outputType of
     0: begin ; Point source ID
       data.source = 0L
@@ -167,8 +187,15 @@ PRO PointInterpolateHeight, tileStruct, col_n, row_n, method, null, min_points, 
       data.z = long(height[cindex] / 0.01D)
       header.systemID = 0B
       header.systemID = byte('Height: Elev')
+      header.zMax = max(height[cindex])
+      header.zMin = min(height[cindex])
+      header.zScale = 0.01D
+      header.zOffset = 0D
     end
   endcase
   WriteLAS, outFile, header, data
+  
+  ; Return AGH tile
+  return, outFile
   
 END

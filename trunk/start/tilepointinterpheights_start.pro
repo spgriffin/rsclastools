@@ -85,6 +85,7 @@ PRO TilePointInterpHeights_start, event
   t = systime(1)
   
   ; Derive product
+  Widget_Control, info.tmpflag, Get_Value=tmp
   tilexsize = info.tilexsize->Get_Value()
   tileysize = info.tileysize->Get_Value()
   power = info.power->Get_Value()
@@ -101,7 +102,7 @@ PRO TilePointInterpHeights_start, event
   Widget_Control, info.output_type, Get_Value=outputType
   Widget_Control, event.top, /Destroy
   TileInterpolateHeight, info.infile, method=method, tilesize=[tilexsize,tileysize], null=null, $
-    min_points=min_points, sectors=sectors, smoothing=smoothing, outputType=outputType
+    min_points=min_points, sectors=sectors, smoothing=smoothing, outputType=outputType, tmp=tmp
     
   ; Write to and close log file
   printf, loglun, 'Time required: ', systime(1) - t, ' seconds'
@@ -109,6 +110,7 @@ PRO TilePointInterpHeights_start, event
   outputTypeStr = (outputType EQ 0) ? 'SourceID' : 'Elev'
   printf, loglun, 'Interpolation method: ', method
   printf, loglun, 'LAS field with AGH: ', outputTypeStr
+  printf, loglun, 'Tile size: ', tilexsize, tileysize, ' m'
   free_lun, loglun
   
   ; Make file directory cwd

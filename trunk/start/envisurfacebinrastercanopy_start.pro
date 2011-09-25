@@ -85,6 +85,7 @@ PRO ENVISurfaceBinRasterCanopy_start, event
   t = systime(1)
   
   ; Derive product
+  Widget_Control, info.tmpflag, Get_Value=tmp
   Widget_Control, info.metrictype, Get_Value=metrictype
   resolution = info.resolution->Get_Value()
   zone = info.zone->Get_Value()
@@ -102,8 +103,6 @@ PRO ENVISurfaceBinRasterCanopy_start, event
     info.projList[1]: proj = 'BNG'
     info.projList[2]: proj = 'UTM'
   endcase
-  Widget_Control, info.formats, Get_Value=formats
-  outFormat = (formats eq 1) ? 'GeoTIFF' : 'ENVI'
   coverType = info.cover_droplist->GetSelection()
   percentileType = info.percentile_droplist->GetSelection()
   case info.prod_droplist->GetSelection() of
@@ -128,8 +127,6 @@ PRO ENVISurfaceBinRasterCanopy_start, event
   endcase
   returnType = info.return_droplist->GetSelection()
   StatsType = 'Canopy'
-  Widget_Control, info.formats, Get_Value=formats
-  outFormat = (formats eq 1) ? 'GeoTIFF' : 'ENVI'
   Widget_Control, event.top, /Destroy
   
   productOptions = {method:productType, height_threshold:height_threshold, weights:weights, percentile:height_percentile, rhovg_method:rhovg_method, $
@@ -137,12 +134,13 @@ PRO ENVISurfaceBinRasterCanopy_start, event
     returnType:returnType, class:'All'}
     
   TileBinSurface, info.infile, resolution=resolution, zone=zone, tilesize=[tilexsize,tileysize], null=null, hemisphere=hemisphere, $
-    proj=proj, productType='Canopy Metric', separate=surfacetype, productOptions=productOptions,outFormat=outFormat
+    proj=proj, productType='Canopy Metric', separate=surfacetype, productOptions=productOptions, tmp=tmp
     
   ; Write to and close log file
   printf, loglun, 'Time required: ', systime(1) - t, ' seconds'
   printf, loglun, 'Memory required: ', memory(/highwater) - start_mem, ' bytes'
   printf, loglun, 'Spatial resolution: ', resolution, ' m'
+  printf, loglun, 'Tile size: ', tilexsize, tileysize, ' m'
   free_lun, loglun
   
   ; Make file directory cwd

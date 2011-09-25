@@ -96,7 +96,7 @@ PRO Ascii2LAS, infile, columns, delimiter, limit, skipline, class
     fparts = strsplit(infile[i], '.', /extract)
     outputFile = fparts[0] + '.las'
     las_data = InitDataLAS(pointFormat=3)
-    outputHeader = InitHeaderLAS(pointFormat=3,versionMinor=3)
+    outputHeader = InitHeaderLAS(pointFormat=3,versionMinor=2)
     outputHeader.systemID = byte('ASCII import')
     outputHeader.xScale = 0.01D
     outputHeader.yScale = 0.01D
@@ -104,9 +104,6 @@ PRO Ascii2LAS, infile, columns, delimiter, limit, skipline, class
     outputHeader.xOffset = 0D
     outputHeader.yOffset = 0D
     outputHeader.zOffset = 0D
-    outputHeader.pointFormat = 1
-    outputHeader.versionMajor = 1
-    outputHeader.versionMinor = 2
     WriteLAS, outputFile, outputHeader, /nodata, /check
     openw, outputLun, outputFile, /get_lun, /swap_if_big_endian, /append
     time = 0D
@@ -161,7 +158,7 @@ PRO Ascii2LAS, infile, columns, delimiter, limit, skipline, class
           progressBar->Destroy
           return
         endif
-        progressbar->Update, (float(bcount) / nSub) * 100.0
+        progressbar->Update, (float(bcount) / (nSub * subSize)) * 100.0
         
         ; Check the specified data format matches the line
         no_fields = total(columns GE 0)

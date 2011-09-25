@@ -74,7 +74,7 @@
 ;###########################################################################
 
 PRO TileInterpolateHeight, lasfiles, method=method, tilesize=tilesize, null=null, $
-    min_points=min_points, sectors=sectors, smoothing=smoothing, outputType=outputType
+    min_points=min_points, sectors=sectors, smoothing=smoothing, outputType=outputType, tmp=tmp
     
   ; Error handling
   catch, theError
@@ -87,7 +87,7 @@ PRO TileInterpolateHeight, lasfiles, method=method, tilesize=tilesize, null=null
   endif
   
   ; Keywords and system stuff
-  forward_function SurfaceTile
+  forward_function SurfaceTile, PointInterpolateHeight
   if not keyword_set(method) then method = 'NaturalNeighbor'
   if not keyword_set(tilesize) then tilesize = [100.0,100.0]
   if not keyword_set(null) then null = 0.0
@@ -96,53 +96,48 @@ PRO TileInterpolateHeight, lasfiles, method=method, tilesize=tilesize, null=null
   if not keyword_set(smoothing) then smoothing=0
   RSC_LAS_Tools_SysVar
   
+  ; Tile LAS files
+  tileStruct = SurfaceTile(lasfiles, tileXsize=tilesize[0],tileYsize=tilesize[1],tmp=tmp,resolution=resolution, /progress)
+  ncols = (tileStruct.lrx - tileStruct.ulx) / resolution
+  nrows = (tileStruct.uly - tileStruct.lry) / resolution
+  
   ; Start progress bar
-  progressBar=Obj_New('progressbar', Color='Forest Green', Text='Initialising...', title='Surface Product', /fast_loop)
+  progressBar=Obj_New('progressbar', Color='Forest Green', Text='Initialising...', title='Interpolating return heights...', /fast_loop)
   progressBar->Start
+  btotal = float(tileStruct.nTiles)
+  bcount = 0D
+  progressbar->Update, bcount
   
-  ; Process all files separately
+  ; Interpolate ground height
+  progressBar -> SetProperty, Text="Interpolating LAS data"
+  outputTiles = strarr(tileStruct.nTiles)
+  for i = 0L, tileStruct.nTiles-1L, 1L do begin
+    if (tileStruct.empty[i] EQ 0) then begin
+      outputTiles[i] = PointInterpolateHeight(tileStruct, tileStruct.col[i], tileStruct.row[i], $
+        method, null, min_points, sectors, smoothing, outputType)
+    endif
+    ; Update progress bar
+    bcount += 1.0
+    if progressBar->CheckCancel() then begin
+      ok=Dialog_Message('LAS interpolation cancelled')
+      progressBar->Destroy
+      return
+    endif
+    progressbar->Update, bcount / btotal * 100.0
+  endfor
+  file_delete, tileStruct.name, /quiet
+  
+  ; Write data back to original files
+  progressBar -> SetProperty, Text="Writing LAS data"
+  bcount = 0D
+  progressbar->Update, bcount
   opath = file_dirname(lasfiles[0])
-  for j = 0L, n_elements(lasfiles) - 1L, 1L do begin
-  
-    ; Output filename
-    fparts = strsplit(file_basename(lasfiles[j]), '.', /extract)
-    outfile = filepath(strjoin([fparts[0],'AGL.las'], '_'), root_dir=opath)
-    las_input = lasfiles[j]
-    progressBar -> SetProperty, Text=strtrim(las_input,2)
-    bcount = 0D
-    progressbar->Update, 0D
-    
-    ; Tile
-    progressBar -> SetProperty, Text="Tiling LAS data"
-    tileStruct = SurfaceTile(las_input, tileXsize=tilesize[0],tileYsize=tilesize[1],/tmp,resolution=resolution)
-    ncols = (tileStruct.lrx - tileStruct.ulx) / resolution
-    nrows = (tileStruct.uly - tileStruct.lry) / resolution
-    btotal = float(tileStruct.nrows) + 1.0
-    
-    ; Interpolate
-    progressBar -> SetProperty, Text="Interpolating LAS data"
-    for row = 1L, tileStruct.nrows, 1L do begin
-      index = where(tileStruct.row EQ (tileStruct.nrows-row+1L))
-      for i = 0L, tileStruct.ncols-1L, 1L do begin
-        if (tileStruct.empty[index[i]] EQ 0) then begin
-          PointInterpolateHeight, tileStruct, tileStruct.col[index[i]], tileStruct.row[index[i]], method, $
-            null, min_points, sectors, smoothing, outputType
-        endif
-      endfor
-      ; Update progress bar
-      bcount += 1.0
-      if progressBar->CheckCancel() then begin
-        ok=Dialog_Message('LAS interpolation cancelled')
-        progressBar->Destroy
-        return
-      endif
-      progressbar->Update, bcount / btotal * 100.0
-    endfor
-    
-    ; Stitch and sort temporary tiles
-    progressBar -> SetProperty, Text="Stitching LAS data"
-    openw, outputLun, outfile, /get_lun
-    ReadHeaderLas, lasfiles[j], temp_header
+  outputFiles = lasfiles
+  for i = 0L, n_elements(lasfiles)-1L, 1L do begin
+    ReadHeaderLas, lasfiles[i], temp_header
+    fparts = strsplit(file_basename(lasfiles[i]), '.', /extract)
+    outputFiles[i] = filepath(strjoin([fparts[0],'AGH.las'], '_'), root_dir=opath)
+    openw, outputLun, outputFiles[i], /get_lun, /swap_if_big_endian
     case outputType of
       0: begin ; Point source ID
         temp_header.systemID = 0B
@@ -153,28 +148,36 @@ PRO TileInterpolateHeight, lasfiles, method=method, tilesize=tilesize, null=null
         temp_header.systemID = byte('Height: Elev')
       end
     endcase
+    temp_header.dataoffset = temp_header.headersize ; No inheritance of VLR's for RSC LAS Tools processing
+    temp_header.xScale = tileStruct.xScale
+    temp_header.yScale = tileStruct.yScale
+    temp_header.zScale = tileStruct.zScale
+    temp_header.xOffset = tileStruct.xOffset
+    temp_header.yOffset = tileStruct.yOffset
+    temp_header.zOffset = tileStruct.zOffset
     writeu, outputLun, temp_header
-    point_lun, outputLun, temp_header.dataOffset
-    for i = 0L, tileStruct.nTiles-1L, 1L do begin
-      if (tileStruct.empty[i] EQ 0) then begin
-        ReadLAS, tileStruct.name[i], temp_header, temp_data
-        writeu, outputLun, temp_data
-      endif
-    endfor
     free_lun, outputLun
-    ; Update progress bar
+  endfor
+  for i = 0L, tileStruct.nTiles-1L, 1L do begin
+    if (tileStruct.empty[i] eq 0) then begin
+      progressBar -> SetProperty, Text=strtrim(outputTiles[i],2)
+      ReadLAS, outputTiles[i], tile_header, tile_data
+      uFileID = tile_data[uniq(tile_data.user, sort(tile_data.user))].user
+      for j = 0L, n_elements(uFileID)-1L, 1L do begin
+        index = where(tile_data.user eq uFileID[j])
+        openw, outputLun, outputFiles[uFileID[j]], /get_lun, /swap_if_big_endian, /append
+        writeu, outputLun, tile_data[index]
+        free_lun, outputLun
+      endfor
+      file_delete, outputTiles[i], /quiet
+    endif
     bcount += 1.0
     if progressBar->CheckCancel() then begin
-      ok=Dialog_Message('LAS interpolation cancelled')
+      ok=Dialog_Message('LAS writing cancelled')
       progressBar->Destroy
       return
     endif
-    progressbar->Update, bcount / btotal * 100.0
-    
-    ; Delete temporary tiles
-    index = where(tileStruct.empty eq 0, count)
-    if (count gt 0) then file_delete, tileStruct.name[index], /quiet
-    
+    progressbar->Update, bcount / float(tileStruct.nTiles) * 100.0
   endfor
   
   ; End progress bar

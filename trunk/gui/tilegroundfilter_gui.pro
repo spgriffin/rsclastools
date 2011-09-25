@@ -95,8 +95,11 @@ PRO TileGroundFilter_GUI
   tlb1 = widget_base(tlb, column=1, xsize=!QRSC_LIDAR_XSIZE)
   text1 = WIDGET_LABEL(tlb1, value='Tiling Settings', frame=0, /align_center)
   Base1 = widget_base(tlb1, column=1, frame=1)
-  tilexsize = FSC_INPUTFIELD(Base1, Title='X tile size (m) : ', Value=100, /IntegerValue, /Positive, LabelAlign=1)
-  tileysize = FSC_INPUTFIELD(Base1, Title='Y tile size (m) : ', Value=100, /IntegerValue, /Positive, LabelAlign=1)
+  tilexsize = FSC_INPUTFIELD(Base1, Title='X tile size (m) : ', Value=2000, /IntegerValue, /Positive, LabelAlign=1)
+  tileysize = FSC_INPUTFIELD(Base1, Title='Y tile size (m) : ', Value=2000, /IntegerValue, /Positive, LabelAlign=1)
+  fields = ['Use system directory for temporary files']
+  tmpflag = cw_bgroup(Base1, fields, /nonexclusive, SET_VALUE=[1])
+  text = WIDGET_LABEL(Base1, value='To minimise processing time, set as large as your available memory will allow.', frame=0, /align_left)
 
   tlb2 = widget_base(tlb, column=1, xsize=!QRSC_LIDAR_XSIZE)
   text2 = WIDGET_LABEL(tlb2, value='Ground Filter Parameters', frame=0, /align_center)
@@ -149,6 +152,7 @@ PRO TileGroundFilter_GUI
     field4:field4, $ ; slope
     field5:field5, $ ; resolution
     field6:field6, $ ; threshold
+    tmpflag:tmpflag, $ ; system directory tmp flag
     infile:infile} ; filename/s
   XManager, 'RSC_LAS_Tools', tlb, /No_Block
   

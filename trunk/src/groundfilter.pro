@@ -85,12 +85,10 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
   if not keyword_set(height_threshold) then height_threshold=0.15
   
   ; Regularise the grid
-  ;counts = hist2d_rilidar(easting,northing,ri,n_cols,n_rows,BIN1=cell_size,BIN2=cell_size, $
-  ;  MIN1=min(easting),MIN2=min(northing),MAX1=max(easting),MAX2=max(northing))
   v = transpose([[easting], [northing]])
-  ;v = reform(transpose([[easting], [northing]]),2,n_elements(elevation))
-  counts = hist_nd(v, cell_size, reverse_indices=ri, /omit_upper, $
-      min=[min(easting),min(northing)], max=[max(easting),max(northing)])
+  cell_size_temp = cell_size
+  counts = hist_nd(v, cell_size_temp, reverse_indices=ri, $
+      min=[min(easting),min(northing)], max=[max(easting)+1e-6,max(northing)+1e-6])
   
   elevation_grid = float(temporary(counts))
   for i=0L,n_elements(elevation_grid)-1L,1L do begin
@@ -117,7 +115,7 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
   for q = 1L,n_elements(w)-1L,1L do begin
   
     ; Create kernel
-    if (w[q] lt b_start) then begin
+    if (w[q] ge b_start) then begin
     
       kernel_base = float(shift(dist(2.0 * w[q] + 1.0), w[q], w[q]) LE w[q])
       kernel_size = 2.0 * w[q] + 1.0

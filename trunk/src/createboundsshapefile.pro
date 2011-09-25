@@ -74,7 +74,7 @@
 ;
 ;###########################################################################
 
-PRO CreateBoundsShapefile, outfile, xcoords, ycoords, name, kml=kml, in_proj=in_proj, out_proj=out_proj, zone=zone, hemisphere=hemisphere
+PRO CreateBoundsShapefile, outfile, xcoords, ycoords, zcoord, name, kml=kml, in_proj=in_proj, out_proj=out_proj, zone=zone, hemisphere=hemisphere
   
   compile_opt idl2
   forward_function ReprojectCoords
@@ -113,8 +113,8 @@ PRO CreateBoundsShapefile, outfile, xcoords, ycoords, name, kml=kml, in_proj=in_
     printf, lun, '<LinearRing>'
     printf, lun, '<coordinates>'
     
-    for i = 0L, n_elements(xout)-1L, 1L do begin
-      printf, lun, strjoin([strtrim(lnglat[0,i], 2),strtrim(lnglat[1,i], 2),'0'], ',')
+    for i = 0L, n_elements(xcoords)-1L, 1L do begin
+      printf, lun, strjoin([strtrim(lnglat[0,i], 2),strtrim(lnglat[1,i], 2),zcoord], ',')
     endfor
     
     printf, lun, '</coordinates>'

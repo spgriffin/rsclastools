@@ -145,13 +145,11 @@ PRO LidarENVISurfaceInterpolate_GUI
   hemi_droplist = FSC_Droplist(Base1, Value=hemiList, Index=0, title='UTM hemisphere : ')
   tilexsize = FSC_INPUTFIELD(Base1, Title='X tile size (m) : ', Value=100, /IntegerValue, /Positive, LabelAlign=1)
   tileysize = FSC_INPUTFIELD(Base1, Title='Y tile size (m) : ', Value=100, /IntegerValue, /Positive, LabelAlign=1)
+  fields = ['Use system directory for temporary files']
+  tmpflag = cw_bgroup(Base1, fields, /nonexclusive, SET_VALUE=[1])
   text = WIDGET_LABEL(Base1, value='For selected LAS files : ', frame=0, /align_left)
   fields = ['Create a single surface from all LAS files', 'Create a separate surface for each LAS file']
   surfacetype = cw_bgroup(Base1, fields, column=1, /exclusive, set_value=0)
-  text = WIDGET_LABEL(Base1, value='Output file format : ', frame=0, /align_left)
-  format_fields = ['ENVI', 'GeoTIFF']
-  formats = cw_bgroup(Base1, format_fields, column=2, /exclusive, set_value=0)
-  text = WIDGET_LABEL(Base1, value='Warning: Currently writing to GeoTIFF requires all data to be in memory', frame=0, /align_left)
   text2 = WIDGET_LABEL(tlb, value='Interpolation Settings', frame=0, /align_center)
   Base2 = widget_base(tlb, column=1, frame=1)
   method_droplist = FSC_Droplist(Base2, Value=interpList, Index=0, title='Interpolation Method : ')
@@ -200,7 +198,7 @@ PRO LidarENVISurfaceInterpolate_GUI
     interpList:interpList, $ ;Interpolation Methods
     productList:productList, $ ;Surface products
     projList:projList, $ ; Projection types
-    formats:formats, $ ; file format
+    tmpflag:tmpflag, $ ; System directory temp flag
     surfacetype:surfacetype} ; Single or separate surfaces
   XManager, 'RSC_LAS_Tools', tlb, /No_Block
   

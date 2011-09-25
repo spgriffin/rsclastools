@@ -74,7 +74,7 @@
 ;###########################################################################
 
 PRO TileGroundFilter, lasfiles, resolution=resolution, tilesize=tilesize, b_start=b_start, $
-    bmax=bmax,dh0=dh0,slope=slope,height_threshold=height_threshold
+    bmax=bmax,dh0=dh0,slope=slope,height_threshold=height_threshold, tmp=tmp
     
   ; Error handling
   compile_opt idl2
@@ -116,7 +116,7 @@ PRO TileGroundFilter, lasfiles, resolution=resolution, tilesize=tilesize, b_star
     
     ; Tile
     progressBar -> SetProperty, Text="Tiling LAS data"
-    tileStruct = SurfaceTile(las_input, tileXsize=tilesize[0],tileYsize=tilesize[1],/tmp,resolution=resolution)
+    tileStruct = SurfaceTile(las_input, tileXsize=tilesize[0],tileYsize=tilesize[1],tmp=tmp,resolution=resolution)
     ncols = (tileStruct.lrx - tileStruct.ulx) / resolution
     nrows = (tileStruct.uly - tileStruct.lry) / resolution
     btotal = float(tileStruct.nrows) + 1.0

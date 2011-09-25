@@ -85,6 +85,7 @@ PRO TileGroundFilter_start, event
   t = systime(1)
   
   ; Derive product
+  Widget_Control, info.tmpflag, Get_Value=tmp
   tilexsize = info.tilexsize->Get_Value()
   tileysize = info.tileysize->Get_Value()
   dh0 = info.field3->Get_Value()
@@ -95,7 +96,7 @@ PRO TileGroundFilter_start, event
   height_threshold = info.field6->Get_Value()
   Widget_Control, event.top, /Destroy
   TileGroundFilter, info.infile, resolution=resolution, tilesize=[tilexsize,tileysize], b_start=b_start, $
-    bmax=bmax,dh0=dh0,slope=slope,height_threshold=height_threshold
+    bmax=bmax,dh0=dh0,slope=slope,height_threshold=height_threshold,tmp=tmp
     
   ; Write to and close log file
   printf, loglun, 'Time required: ', systime(1) - t, ' seconds'

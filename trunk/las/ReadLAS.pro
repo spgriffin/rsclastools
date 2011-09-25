@@ -166,6 +166,33 @@ pro ReadLAS, inputFile, header, data, records=records, noData=noData, assocLun=a
       readu,     inputLun, data
       free_lun,  inputLun
       
+      ; Read the waveforms packets if set
+      if keyword_set(wdp) then begin
+      
+        ; Read the eVLR
+        tempRecord = InitRecordLAS(/noData, /eVLR)
+        internal = ishft(ishft(header.globalencoding,14),-15)
+        if (internal eq 1) then begin
+          wdplun = inputLun
+        endif else begin
+          fparts = strsplit(inputFile, '.', /extract)
+          openr, wdpLun, fparts[0]+'.wdp', /get_lun, /swap_if_big_endian
+        endelse
+        point_lun, wdpLun, header.wdp
+        readu, inputLun, tempRecord
+        
+        ; Read the VLR data
+        if (tempRecord.recordLength gt 0) then begin
+          ; Check if the record data is a WPD
+          if (tempRecord.recordID eq 65535) then begin
+            dataTemp = bytarr(tempRecord.recordLength)
+            readu, wdpLun, dataTemp
+            wdp = create_struct(tempRecord, 'data', ptr_new(dataTemp))
+          endif
+        endif
+        
+      endif
+      
     endelse
     
   endif else begin

@@ -103,7 +103,10 @@ PRO LidarENVISurfaceBinStatistic_GUI
   ; Create list of return units
   fieldList = ['Elevation', $
     'Intensity', $
-    'Height']
+    'Height', $
+    'Red', $
+    'Green', $
+    'Blue']
     
   ; Create list of classes
   classList = ['Ground', $
@@ -171,10 +174,8 @@ PRO LidarENVISurfaceBinStatistic_GUI
   hemi_droplist = FSC_Droplist(Base1, Value=hemiList, Index=0, title='UTM hemisphere : ')
   tilexsize = FSC_INPUTFIELD(Base1, Title='X tile size (m) : ', Value=100, /IntegerValue, /Positive, LabelAlign=1)
   tileysize = FSC_INPUTFIELD(Base1, Title='Y tile size (m) : ', Value=100, /IntegerValue, /Positive, LabelAlign=1)
-  text = WIDGET_LABEL(Base1, value='Output file format : ', frame=0, /align_left)
-  format_fields = ['ENVI', 'GeoTIFF']
-  formats = cw_bgroup(Base1, format_fields, column=2, /exclusive, set_value=0)
-  text = WIDGET_LABEL(Base1, value='Warning: Currently writing to GeoTIFF requires all data to be in memory', frame=0, /align_left)
+  fields = ['Use system directory for temporary files']
+  tmpflag = cw_bgroup(Base1, fields, /nonexclusive, SET_VALUE=[1])
   
   Base3 = widget_base(tlb, column=1)
   text = WIDGET_LABEL(Base3, value='Information', frame=0, /align_center)
@@ -215,7 +216,7 @@ PRO LidarENVISurfaceBinStatistic_GUI
     classList:classList, $ ;Class type
     fieldList:fieldList, $ ;Field type
     projList:projList, $ ; Projection types
-    formats:formats, $ ; File format
+    tmpflag:tmpflag, $ ; temp file flag
     surfacetype:surfacetype} ; Single or separate surfaces
   XManager, 'RSC_LAS_Tools', tlb, /No_Block
   
