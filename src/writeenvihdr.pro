@@ -73,7 +73,7 @@
 ;
 ;###########################################################################
 
-PRO WriteENVIhdr, outfile, zone, resolution, xOrigin, yOrigin, ncol, nrow, proj, hemisphere, productType
+PRO WriteENVIhdr, outfile, zone, resolution, xOrigin, yOrigin, ncol, nrow, nbands, proj, hemisphere, productType
 
   openw, hlun, outfile + '.hdr', /get_lun
   central_meridian = zone * 6 - 183
@@ -82,11 +82,11 @@ PRO WriteENVIhdr, outfile, zone, resolution, xOrigin, yOrigin, ncol, nrow, proj,
   printf, hlun, 'description = {' + outfile + '}'
   printf, hlun, 'samples = ' + strtrim(ncol, 2)
   printf, hlun, 'lines   = ' + strtrim(nrow, 2)
-  printf, hlun, 'bands   = 1'
+  printf, hlun, 'bands   = ' + strtrim(nbands, 2)
   printf, hlun, 'header offset = 0'
   printf, hlun, 'file type = ENVI Standard'
   printf, hlun, 'data type = 4'
-  printf, hlun, 'interleave = bsq'
+  printf, hlun, 'interleave = bil'
   printf, hlun, 'byte order = 0'
   case proj of
     'MGA94': begin

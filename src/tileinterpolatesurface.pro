@@ -74,8 +74,7 @@
 ;###########################################################################
 
 PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone=zone, tilesize=tilesize, null=null, hemisphere=hemisphere, $
-    min_points=min_points, sectors=sectors, smoothing=smoothing, proj=proj, productType=productType, separate=separate, $
-    outFormat=outFormat
+    min_points=min_points, sectors=sectors, smoothing=smoothing, proj=proj, productType=productType, separate=separate, tmp=tmp
     
   ; Error handling
   catch, theError
@@ -89,7 +88,6 @@ PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone
   
   ; Keywords and system stuff
   forward_function SurfaceTile, SurfaceInterpolate
-  if not keyword_set(outFormat) then outFormat = 'ENVI'
   if not keyword_set(method) then method = 'NaturalNeighbor'
   if not keyword_set(resolution) then resolution = 0.5
   if not keyword_set(zone) then zone = 55
@@ -119,6 +117,7 @@ PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone
   progressBar=Obj_New('progressbar', Color='Forest Green', Text='Initialising...', title='Surface Product', /fast_loop)
   progressBar->Start
   bcount = 0.0
+  progressbar->Update, bcount
   
   ; Process all files separately or all at once
   opath = file_dirname(lasfiles[0])
@@ -135,13 +134,12 @@ PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone
       outfile = filepath(strjoin([fparts[0],'RSCLASTools_TiledSurface',method,productType,resolution_str], '_'), root_dir=opath)
       las_input = lasfiles[j]
       progressBar -> SetProperty, Text=strtrim(las_input,2)
-      progressbar->Update, 0D
     endelse
     openw, lun, outfile, /get_lun
     
     ; Tile
     progressBar -> SetProperty, Text="Tiling LAS data"
-    tileStruct = SurfaceTile(las_input, tileXsize=tilesize[0],tileYsize=tilesize[1],/tmp,resolution=resolution)
+    tileStruct = SurfaceTile(las_input, tileXsize=tilesize[0],tileYsize=tilesize[1],tmp=tmp,resolution=resolution)
     ncols = (tileStruct.lrx - tileStruct.ulx) / resolution
     nrows = (tileStruct.uly - tileStruct.lry) / resolution
     btotal = float(tileStruct.nrows)
@@ -178,13 +176,7 @@ PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone
     if (count gt 0) then file_delete, tileStruct.name[index], /quiet
     
     ; Write the ENVI header file
-    if (outFormat eq 'ENVI') then begin
-      writeENVIhdr, outfile, zone, resolution, tileStruct.ulx, tileStruct.uly, ncols, nrows, proj, hemisphere, productType
-    endif else begin
-      writegeotiff, outfile, tileStruct.ulx, tileStruct.uly, proj, outfile+'.tif', cell_size=resolution, /assocInput, $
-        ncols=ncols, nrows=nrows, zone=zone
-      file_delete, outfile, /quiet
-    endelse
+    writeENVIhdr, outfile, zone, resolution, tileStruct.ulx, tileStruct.uly, ncols, nrows, 1, proj, hemisphere, productType
     
   endfor
   

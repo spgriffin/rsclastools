@@ -73,8 +73,8 @@
 ;
 ;###########################################################################
 
-FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsize=splitsize, tmp=tmp, resolution=resolution
-
+FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsize=splitsize, tmp=tmp, resolution=resolution, progress=progress
+  
   ; Keywords
   forward_function InitDataLAS, GetMasterHeader
   if not keyword_set(splitsize) then splitsize = 1000000D
@@ -161,12 +161,24 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
     tileRow[i] = dims[1] + 1
     WriteLAS, outputFiles[i], outputHeader, /nodata
   endfor
+
+  ; Start progress bar
+  if keyword_set(progress) then begin
+    progressBar=Obj_New('progressbar', Color='Forest Green', Text='Initialising...', title='Tiling LAS data...', /fast_loop)
+    progressBar->Start
+    btotal = double(n_elements(infiles))
+    bcount = 0D
+    progressbar -> Update, bcount
+  endif
   
   ; Loop through each las file
   nFiles = n_elements(infiles)
   for k = 0L, nFiles-1L, 1L do begin
   
     ; Read input file
+    if keyword_set(progress) then begin
+      progressBar -> SetProperty, Text=strtrim(infiles[k])
+    endif
     assocLun = 1
     ReadLAS, infiles[k], las_header, las_data, assocLun=assocLun
     if (splitsize GT (las_header.nPoints + buffer)) then begin
@@ -203,12 +215,15 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
         tempData.z = long(((tempData.z * las_header.zScale + las_header.zOffset) - outputHeader.zOffset) / outputHeader.zScale)
       endif
       
+      ; Define point origin in the USER field
+      tempData.user = k
+      
       ; Write the returns to their correct tile
       for j = 0L, nTiles - 1L, 1L do begin
         if (ri[j] NE ri[j+1L]) then begin
+          ReadHeaderLas, outputFiles[j], temp_header
           openw, outputLun, outputFiles[j], /get_lun, /swap_if_big_endian, /append
           writeu, outputLun, tempData[ri[ri[j]:ri[j+1L]-1L]]
-          ReadHeaderLas, outputFiles[j], temp_header
           temp_header.nPoints += n_elements(ri[ri[j]:ri[j+1L]-1L])
           nReturns = temp_header.nReturns
           temp_header.nReturns = histogram(reform([ishft(ishft(tempData[ri[ri[j]:ri[j+1L]-1L]].nReturn, 5), -5)]), min=1, max=5, input=nReturns)
@@ -228,6 +243,17 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
     
     free_lun, assocLun
     
+    ; Update progress bar
+    if keyword_set(progress) then begin
+      bcount += 1D
+      if progressBar->CheckCancel() then begin
+        ok=Dialog_Message('LAS tiling cancelled')
+        progressBar->Destroy
+        retall
+      endif
+      progressbar->Update, bcount / btotal * 100.0
+    endif
+    
   endfor
   
   ; Generate file list
@@ -240,6 +266,11 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
       file_delete, outputFiles[i], /quiet
     endif
   endfor
+  
+  ; Close progress bar
+  if keyword_set(progress) then begin
+    progressbar->Destroy
+  endif
   
   ; Return structure of necessary tile info
   return, create_struct('name', outputFiles, $

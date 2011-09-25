@@ -73,7 +73,7 @@
 ;
 ;###########################################################################
 
-PRO WRITEGEOTIFF, input, x0, y0, proj, output, cell_size=cell_size, assocInput=assocInput, ncols=ncols, nrows=nrows, zone=zone
+PRO WRITEGEOTIFF, input, x0, y0, proj, output, cell_size=cell_size, assocInput=assocInput, ncols=ncols, nrows=nrows, nbands=nbands, zone=zone
 
   ; Error handling
   catch, theError
@@ -106,7 +106,7 @@ PRO WRITEGEOTIFF, input, x0, y0, proj, output, cell_size=cell_size, assocInput=a
     write_tiff, output, input, geotiff=geo, /float, description=filename
   endif else begin
     openr, lun, input, /get_lun
-    temp = assoc(lun, fltarr(ncols, nrows, /nozero))
+    temp = assoc(lun, fltarr(ncols, nrows, nbands, /nozero))
     write_tiff, output, temp[0], geotiff=geo, /float, description=output
     free_lun, lun
   endelse

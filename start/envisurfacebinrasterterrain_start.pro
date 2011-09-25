@@ -85,6 +85,7 @@ PRO ENVISurfaceBinRasterTerrain_start, event
   t = systime(1)
   
   ; Derive product
+  Widget_Control, info.tmpflag, Get_Value=tmp
   resolution = info.resolution->Get_Value()
   zone = info.zone->Get_Value()
   null = info.null->Get_Value()
@@ -102,17 +103,16 @@ PRO ENVISurfaceBinRasterTerrain_start, event
     info.projList[1]: proj = 'BNG'
     info.projList[2]: proj = 'UTM'
   endcase
-  Widget_Control, info.formats, Get_Value=formats
-  outFormat = (formats eq 1) ? 'GeoTIFF' : 'ENVI'
   Widget_Control, event.top, /Destroy
   productOptions = {method:method,returnType:returnType,field:'Elevation',class:'Ground'}
   TileBinSurface, info.infile, resolution=resolution, zone=zone, tilesize=[tilexsize,tileysize], null=null, hemisphere=hemisphere, $
-    proj=proj, productType='Terrain Metric', separate=surfacetype, productOptions=productOptions,outFormat=outFormat
+    proj=proj, productType='Terrain Metric', separate=surfacetype, productOptions=productOptions,tmp=tmp
     
   ; Write to and close log file
   printf, loglun, 'Time required: ', systime(1) - t, ' seconds'
   printf, loglun, 'Memory required: ', memory(/highwater) - start_mem, ' bytes'
   printf, loglun, 'Spatial resolution: ', resolution, ' m'
+  printf, loglun, 'Tile size: ', tilexsize, tileysize, ' m'
   free_lun, loglun
   
   ; Make file directory cwd

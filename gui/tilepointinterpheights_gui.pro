@@ -117,6 +117,8 @@ PRO TilePointInterpHeights_GUI
   Base4 = widget_base(tlb4, column=1, frame=1)
   tilexsize = FSC_INPUTFIELD(Base4, Title='X tile size (m) : ', Value=100, /IntegerValue, /Positive, LabelAlign=1)
   tileysize = FSC_INPUTFIELD(Base4, Title='Y tile size (m) : ', Value=100, /IntegerValue, /Positive, LabelAlign=1)
+  fields = ['Use system directory for temporary files']
+  tmpflag = cw_bgroup(Base4, fields, /nonexclusive, SET_VALUE=[1])
   
   tlb2 = widget_base(tlb, column=1, xsize=!QRSC_LIDAR_XSIZE)
   text2 = WIDGET_LABEL(tlb2, value='Interpolation Settings', frame=0, /align_center)
@@ -157,6 +159,7 @@ PRO TilePointInterpHeights_GUI
     sectors:sectors, $ ; sectors
     infile:infile, $ ; filename/s
     interpList:interpList, $ ;Interpolation Methods
+    tmpflag:tmpflag, $ ; Temporary directory flag
     output_type:output_type} ; Method to store calculated heights
     
   XManager, 'RSC_LAS_Tools', tlb, /No_Block

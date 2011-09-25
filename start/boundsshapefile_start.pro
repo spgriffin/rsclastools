@@ -96,9 +96,9 @@ PRO BoundsShapefile_start, event
     endelse
     fparts = strsplit(info.infile[i], '.', /extract)
     outfile = fparts[0] + '_extent'
-    CreateBoundsShapefile, outfile, px, py, file_basename(info.infile[i]), kml=filetype, in_proj=in_proj, out_proj=out_proj, zone=zone, hemisphere=hemisphere
+    CreateBoundsShapefile, outfile, px, py, las_header.zMax, file_basename(info.infile[i]), kml=filetype, in_proj=in_proj, out_proj=out_proj, zone=zone, hemisphere=hemisphere
   endfor
-  if keyword_set(do_kml) then begin
+  if (filetype eq 1) then begin
     ok = dialog_message('Extent KML file/s created.', /information)
   endif else begin
     ok = dialog_message('Extent shapefile/s created.', /information)

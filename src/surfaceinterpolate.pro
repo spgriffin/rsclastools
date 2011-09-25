@@ -76,7 +76,7 @@
 FUNCTION SurfaceInterpolate, tileStruct, col_n, row_n, method, resolution, null, min_points, sectors, smoothing, productType
 
   ; Keywords
-  forward_function NNfix, filterReturns, GetEdgePoints
+  forward_function NNfix, filterReturns
   
   ; Read tiles
   nTiles = n_elements(tileStruct.name)
@@ -141,8 +141,7 @@ FUNCTION SurfaceInterpolate, tileStruct, col_n, row_n, method, resolution, null,
   endcase
   
   ; Do triangulation and work out edge points
-  triangulate, easting, northing, triangles, chull, connectivity=clist
-  bounds = GetEdgePoints(easting, northing, chull, clist)
+  triangulate, easting, northing, triangles, bounds
   
   case method of
     'NearestNeighbor': begin
@@ -157,7 +156,7 @@ FUNCTION SurfaceInterpolate, tileStruct, col_n, row_n, method, resolution, null,
     end
     'NaturalNeighbor': begin
       surf = griddata(easting, northing, zvalue, method=method, triangles=triangles, /grid, xout=xout, yout=yout, missing=null)
-      surf = NNfix(surf, resolution)
+      ;surf = NNfix(surf, resolution)
     end
     'PolynomialRegression': begin
       surf = griddata(easting, northing, zvalue, power=power, method=method, triangles=triangles, $

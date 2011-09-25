@@ -191,6 +191,15 @@ FUNCTION CanopyMetric, data, height, first, last, single, productType, returnTyp
         metric = null
       endelse
     end
+    'Density Deciles': begin ; Density deciles (for Jackie et al.;maybe useful for biomass prediction)
+      if (count GT 0) then begin
+        upperHP = GetPercentile(height[index], percentile, method='Counts')
+        dBinCounts = histogram(height[index], max=upperHP, min=height_threshold, nbins=10, locations=locations)
+        metric = total(dBinsCounts, /cumulative) / float(total(dBinCounts))
+      endif else begin
+        metric = null
+      endelse
+    end
     else: metric = float(count)
   endcase
   

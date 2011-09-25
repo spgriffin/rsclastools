@@ -189,6 +189,15 @@ FUNCTION HeightCoverMetric, height, productOptions, first=first, last=last, sing
         metric = null
       endelse
     end
+    'Density Deciles': begin ; Density deciles (for Jackie et al.; maybe useful for biomass prediction)
+      if (count GT 0) then begin
+        upperHP = GetPercentile(height[index], productOptions.percentile, method='Counts')
+        dBinCounts = histogram(height[index], max=upperHP, min=productOptions.height_threshold, nbins=10, locations=locations)
+        metric = total(dBinCounts, /cumulative) / float(count)
+      endif else begin
+        metric = null
+      endelse
+    end
     else: metric = float(count)
   endcase
   
