@@ -260,7 +260,6 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
   for i = 0L, nTiles-1L, 1L do begin
     readHeaderlas, outputFiles[i], las_header
     finfo = file_info(outputFiles[i])
-    ;if (las_header.headerSize eq finfo.size) then begin
     if (las_header.nPoints eq 0) then begin
       tileEmpty[i] = 1
       file_delete, outputFiles[i], /quiet

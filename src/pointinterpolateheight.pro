@@ -189,8 +189,6 @@ FUNCTION PointInterpolateHeight, tileStruct, col_n, row_n, method, null, min_poi
       header.systemID = byte('Height: Elev')
       header.zMax = max(height[cindex])
       header.zMin = min(height[cindex])
-      header.zScale = 0.01D
-      header.zOffset = 0D
     end
   endcase
   WriteLAS, outFile, header, data
