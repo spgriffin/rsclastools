@@ -91,7 +91,9 @@ PRO LidarENVISurfaceBinCanopy_GUI
     'Canopy Openness Index', $
     'Canopy Relief Ratio', $
     'Plant Area Index Proxy', $
-    'Density Deciles']
+    'Density Deciles', $
+    'Fractional Cover Profile', $
+    'Apparent Foliage Profile']
     
   coverList = ['Count Ratio', $
     'Weighted Sum', $
@@ -157,6 +159,7 @@ PRO LidarENVISurfaceBinCanopy_GUI
   prod_droplist = FSC_Droplist(Base1, Value=productList, Index=0, title='Product Type : ')
   return_droplist = FSC_Droplist(Base1, Value=returnList, Index=0, title='Return Type : ')
   max_height = FSC_INPUTFIELD(Base1, Title='Maximum Height Used (m) : ', Value=100.0, /FloatValue, LabelAlign=1, decimal=2, /positive)
+  text = WIDGET_LABEL(Base1, value='Maximum Height Used also defines the maximum height of vertical profile products', frame=0, /align_left)
   resolution = FSC_INPUTFIELD(Base1, Title='Spatial resolution (m) : ', Value=5.0, /FloatValue, /Positive, LabelAlign=1, decimal=2)
   null = FSC_INPUTFIELD(Base1, Title='"No Data" Value * : ', Value=-1.0, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base1, value='* Must be < elevation minimum.', frame=0, /align_left)

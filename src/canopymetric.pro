@@ -200,6 +200,44 @@ FUNCTION CanopyMetric, data, height, first, last, single, productType, returnTyp
         metric = null
       endelse
     end
+    'Fractional Cover Profile': begin ; Vertical cover fraction profile (counts)
+      if (count GT 0) then begin
+        gnd_idx = where(height[index] le height_threshold, gnd_cnt, complement=veg_idx, ncomplement=veg_cnt)
+        if (gnd_cnt gt 0) then height[index[gnd_idx]] = 0.0
+        if (veg_cnt gt 0) then begin
+          vCounts = histogram(height[index[veg_idx]], binsize=vbinsize, locations=locations, $
+            min=-vbinsize, max=ceil(height_threshold_top))
+          metric = float(vCounts) / float(gnd_cnt+veg_cnt)
+        endif else begin
+          nBins = ceil((ceil(height_threshold_top)+vbinsize) / vbinsize)
+          metric = fltarr(nBins)
+        endelse
+      endif else begin
+        metric = null
+      endelse
+    end
+    'Apparent Foliage Profile': begin ; Apparent foliage profile (counts)
+      if (count GT 0) then begin
+        gnd_idx = where(height[index] le height_threshold, gnd_cnt, complement=veg_idx, ncomplement=veg_cnt)
+        if (gnd_cnt gt 0) then height[index[gnd_idx]] = 0.0
+        if (veg_cnt gt 0) then begin
+          vCounts = histogram(height[index[veg_idx]], binsize=vbinsize, locations=locations, $
+            min=-vbinsize, max=ceil(height_threshold_top))
+          nBins = n_elements(locations)
+          coverProfile = float(vCounts) / float(gnd_cnt+veg_cnt) ; Fractional cover profile
+          gapProfileCum = 1.0 - reverse(total(reverse(reform(coverProfile)), 0, /cumulative, /NAN)) ; cumulative GAP FRACTION (1 at top of canopy)
+          idx = where(gapProfileCum lt 1.0, cnt, complement=null_idx,ncomplement=null_count)
+          metric = fltarr(nBins)
+          metric[1:nBins-1] = (alog(gapProfileCum[1:nBins-1]) - alog(gapProfileCum[0:nBins-2])) / vbinsize ; apparent foliage profile
+          if (null_count gt 0) then metric[null_idx] = 0.0
+        endif else begin
+          nBins = ceil((ceil(height_threshold_top)+vbinsize) / vbinsize)
+          metric = fltarr(nBins)
+        endelse
+      endif else begin
+        metric = null
+      endelse
+    end
     else: metric = float(count)
   endcase
   

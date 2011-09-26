@@ -156,11 +156,23 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
         surf = reform(float(surf), dims[0], dims[1], 1)
       end
       'Canopy Metric': begin
-        if (productOptions.method eq 'Density Deciles') then begin
-          surf = fltarr(dims[0], dims[1], 10)
-        endif else begin
-          surf = reform(float(surf), dims[0], dims[1], 1)
-        endelse
+        switch productOptions.method of
+          'Density Deciles': begin
+            surf = fltarr(dims[0], dims[1], 10)
+            break
+          end
+          'Fractional Cover Profile': begin
+            nBins = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
+            surf = fltarr(dims[0], dims[1], nBins)
+            break
+          end
+          'Apparent Foliage Profile': begin
+            nBins = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
+            surf = fltarr(dims[0], dims[1], nBins)
+            break
+          end
+          else: surf = reform(float(surf), dims[0], dims[1], 1)
+        endswitch
       end
       'Terrain Metric': begin
         surf = reform(float(surf), dims[0], dims[1], 1)
@@ -204,11 +216,21 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
     case productType of
       'Statistic': nz = 1
       'Canopy Metric': begin
-        if (productOptions.method eq 'Density Deciles') then begin
-          nz = 10
-        endif else begin
-          nz = 1
-        endelse
+        switch productOptions.method of
+          'Density Deciles': begin
+            nz = 10
+            break
+          end
+          'Fractional Cover Profile': begin
+            nz = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
+            break
+          end
+          'Apparent Foliage Profile': begin
+            nz = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
+            break
+          end
+          else: nz = 1
+        endswitch
       end
       'Terrain Metric': nz = 1
     endcase
@@ -220,6 +242,3 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
   return, surf
   
 END
-
-
-
