@@ -184,7 +184,7 @@ FUNCTION PointInterpolateHeight, tileStruct, col_n, row_n, method, null, min_poi
       header.systemID = byte('Height: Source')
     end
     1: begin ; Elevation
-      data.z = long(height[cindex] / 0.01D)
+      data.z = long((height[cindex] - tileStruct.zOffset) / tileStruct.zScale)
       header.systemID = 0B
       header.systemID = byte('Height: Elev')
       header.zMax = max(height[cindex])

@@ -144,12 +144,28 @@ PRO TileBinSurface, lasfiles, resolution=resolution, zone=zone, tilesize=tilesiz
     
     ; Tile
     progressBar -> SetProperty, Text="Tiling LAS data..."
-    tileStruct = SurfaceTile(las_input, tileXsize=tilesize[0],tileYsize=tilesize[1],tmp=tmp,resolution=resolution)
+    tileStruct = SurfaceTile(las_input, tileXsize=tilesize[0],tileYsize=tilesize[1],tmp=tmp,resolution=resolution,/progress)
     ncols = (tileStruct.lrx - tileStruct.ulx) / resolution
     nrows = (tileStruct.uly - tileStruct.lry) / resolution
     case productType of
       'Statistic': nbands = 1
-      'Canopy Metric': nbands = (productOptions.method eq 'Density Deciles') ? 10 : 1
+      'Canopy Metric': begin
+        switch productOptions.method of
+          'Density Deciles': begin
+            nbands = 10
+            break
+          end
+          'Fractional Cover Profile': begin
+            nbands = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
+            break
+          end
+          'Apparent Foliage Profile': begin
+            nbands = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
+            break
+          end
+          else: nbands = 1
+        endswitch
+      end
       'Terrain Metric': nbands = 1
     endcase
     btotal = float(tileStruct.nrows)
@@ -192,11 +208,31 @@ PRO TileBinSurface, lasfiles, resolution=resolution, zone=zone, tilesize=tilesiz
     if (count gt 0) then file_delete, tileStruct.name[index], /quiet
     
     ; Write the ENVI header file
-    if (productOptions.method eq 'Density Deciles') then begin
-      productBandNames = strjoin(strcompress('D'+string(lindgen(10)+1,format='(I02)'),/remove_all),',')
-    endif else begin
-      productBandNames = productOptions.method
-    endelse
+    
+    case productType of
+      'Statistic': productBandNames = productOptions.method
+      'Canopy Metric': begin
+        switch productOptions.method of
+          'Density Deciles': begin
+            locations = lindgen(nbands) + 1
+            productBandNames = strjoin(strcompress('D'+string(locations,format='(I02)'),/remove_all),',')
+            break
+          end
+          'Fractional Cover Profile': begin
+            locations = findgen(nbands) * productOptions.vbinsize - productOptions.vbinsize
+            productBandNames = strjoin(strcompress('Height '+string(locations,format='(F6.2)'),/remove_all),',')
+            break
+          end
+          'Apparent Foliage Profile': begin
+            locations = findgen(nbands) * productOptions.vbinsize - productOptions.vbinsize
+            productBandNames = strjoin(strcompress('Height '+string(locations,format='(F6.2)'),/remove_all),',')
+            break
+          end
+          else: productBandNames = productOptions.method
+        endswitch
+      end
+      'Terrain Metric': productBandNames = productOptions.method
+    endcase
     writeENVIhdr, outfile, zone, resolution, tileStruct.ulx, tileStruct.uly, ncols, nrows, nbands, proj, hemisphere, productBandNames
     
   endfor
