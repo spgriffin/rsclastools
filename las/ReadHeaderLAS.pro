@@ -76,6 +76,7 @@
 pro ReadHeaderLAS, inputFile, header
 
   compile_opt idl2
+  forward_function InitHeaderLAS
   
   ; Create the header structure without WDP record
   header = InitHeaderLAS()

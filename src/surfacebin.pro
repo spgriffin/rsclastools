@@ -156,23 +156,20 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
         surf = reform(float(surf), dims[0], dims[1], 1)
       end
       'Canopy Metric': begin
-        switch productOptions.method of
+        case productOptions.method of
           'Density Deciles': begin
             surf = fltarr(dims[0], dims[1], 10)
-            break
           end
           'Fractional Cover Profile': begin
-            nBins = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
-            surf = fltarr(dims[0], dims[1], nBins)
-            break
+            nz = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
+            surf = fltarr(dims[0], dims[1], nz)
           end
           'Apparent Foliage Profile': begin
-            nBins = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
-            surf = fltarr(dims[0], dims[1], nBins)
-            break
+            nz = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
+            surf = fltarr(dims[0], dims[1], nz)
           end
           else: surf = reform(float(surf), dims[0], dims[1], 1)
-        endswitch
+        endcase
       end
       'Terrain Metric': begin
         surf = reform(float(surf), dims[0], dims[1], 1)
@@ -216,21 +213,18 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
     case productType of
       'Statistic': nz = 1
       'Canopy Metric': begin
-        switch productOptions.method of
+        case productOptions.method of
           'Density Deciles': begin
             nz = 10
-            break
           end
           'Fractional Cover Profile': begin
             nz = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
-            break
           end
           'Apparent Foliage Profile': begin
             nz = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
-            break
           end
           else: nz = 1
-        endswitch
+        endcase
       end
       'Terrain Metric': nz = 1
     endcase
