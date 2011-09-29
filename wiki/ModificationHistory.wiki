@@ -3,6 +3,7 @@
 ==Version 1.7 - 29/9/2011==
   * Fixed a several bugs reported in Version 1.6
   * Added a fractional cover and apparent foliage profiles to raster products
+  * Subset by location utility now extracts sites that partially overlap LAS file extent
   * Changed some default values used for canopy metric products
 
 ==Version 1.6 - 25/9/2011==
