@@ -74,7 +74,7 @@
 ;###########################################################################
 
 PRO ExtractSite, infile, shape, name, easting, northing, major_axis, minor_axis, azimuth
-  
+
   ; Start progress bar
   bcount = 0
   btotal = n_elements(infile) * n_elements(name)
@@ -116,124 +116,116 @@ PRO ExtractSite, infile, shape, name, easting, northing, major_axis, minor_axis,
     iwidth = header.xMax - header.xMin
     ilength = header.yMax - header.yMin
     inside_index = lonarr(nSites)
-    gt_index = lonarr(nSites)
+    gt_index = lonarr(nSites)   
     for j = 0L, n_elements(name)-1L do begin
+      px_p = [easting[j]-major_axis[j]/2.0,easting[j]+major_axis[j]/2.0,easting[j]+major_axis[j]/2.0,easting[j]-major_axis[j]/2.0]
+      py_p = [northing[j]+major_axis[j]/2.0,northing[j]+major_axis[j]/2.0,northing[j]-major_axis[j]/2.0,northing[j]-major_axis[j]/2.0]
       if (iwidth gt major_axis[j] and iwidth gt major_axis[j]) then begin
-        inside_index[j] = inside->ContainsPoints(easting[j],northing[j])
+        inside_index[j] = max(inside->ContainsPoints(px_p,py_p))
       endif else begin
-        px_p = [easting[j]-major_axis[j]/2.0,easting[j]+major_axis[j]/2.0,easting[j]+major_axis[j]/2.0,easting[j]-major_axis[j]/2.0]
-        py_p = [northing[j]+major_axis[j]/2.0,northing[j]+major_axis[j]/2.0,northing[j]-major_axis[j]/2.0,northing[j]-major_axis[j]/2.0]
         inside_p = Obj_New('IDLanROI', px_p, py_p)
         inside_index[j] = inside->ContainsPoints(header.xMax-iwidth/2.0,header.yMax-ilength/2.0)
         Obj_Destroy, inside_p
         gt_index[j] = 1
       endelse
     endfor
-    index = where(inside_index gt 0, count)
+    index = where(logical_or(inside_index gt 0, gt_index eq 1), count)
     if (count gt 0) then begin
     
       ; Read the input file
       ReadLAS, infile[i], header, data
       fparts = strsplit(infile[i], '.', /extract)
       progressBar -> SetProperty, text=strtrim(infile[i], 2)
+      bcount += (nSites - count)
       
       ; Loop through each extraction location
-      for j = 0L, nSites-1L do begin
+      for j = 0L, count-1L do begin
       
-        ; Check if individual point is inside
-        inside_index = inside->ContainsPoints(easting[j], northing[j])
-        if (inside_index[0] gt 0 or gt_index[j] eq 1) then begin
+        ; Extract returns within radius/block
+        case shape of
+          1: begin ; Rectangle
+            x = ((data.x * header.xScale + header.xOffset) - easting[index[j]]) * cos(azimuth[index[j]]) - $
+              ((data.y * header.yScale + header.yOffset) - northing[index[j]]) * sin(azimuth[index[j]])
+            y = ((data.x * header.xScale + header.xOffset) - easting[index[j]]) * sin(azimuth[index[j]]) + $
+              ((data.y * header.yScale + header.yOffset) - northing[index[j]]) * cos(azimuth[index[j]])
+            distancex = sqrt((x / major_axis[index[j]])^2)
+            distancey = sqrt((y / minor_axis[index[j]])^2)
+            idx = where((distancex LE 1.0) AND (distancey LE 1.0), cnt)
+            if (cnt GT 0L) then begin
+              dataSub = data[idx]
+            endif else begin
+              dataSub = 0
+            endelse
+          end
+          2: begin ; Ellipse
+            x = ((data.x * header.xScale + header.xOffset) - easting[index[j]]) * cos(azimuth[index[j]]) - $
+              ((data.y * header.yScale + header.yOffset) - northing[index[j]]) * sin(azimuth[index[j]])
+            y = ((data.x * header.xScale + header.xOffset) - easting[index[j]]) * sin(azimuth[index[j]]) + $
+              ((data.y * header.yScale + header.yOffset) - northing[index[j]]) * cos(azimuth[index[j]])
+            distance = sqrt((x / major_axis[index[j]])^2 + (y / minor_axis[index[j]])^2)
+            idx = where(distance LE 1.0, cnt)
+            if (cnt GT 0L) then begin
+              dataSub = data[idx]
+            endif else begin
+              dataSub = 0
+            endelse
+          end
+          else: return
+        endcase
+        if (size(dataSub, /type) NE 8) then continue
         
-          ; Extract returns within radius/block
-          case shape of
-            1: begin ; Rectangle
-              x = ((data.x * header.xScale + header.xOffset) - easting[j]) * cos(azimuth[j]) - $
-                ((data.y * header.yScale + header.yOffset) - northing[j]) * sin(azimuth[j])
-              y = ((data.x * header.xScale + header.xOffset) - easting[j]) * sin(azimuth[j]) + $
-                ((data.y * header.yScale + header.yOffset) - northing[j]) * cos(azimuth[j])
-              distancex = sqrt((x / major_axis[j])^2)
-              distancey = sqrt((y / minor_axis[j])^2)
-              index = where((distancex LE 1.0) AND (distancey LE 1.0), count)
-              if (count GT 0L) then begin
-                dataSub = data[index]
-              endif else begin
-                dataSub = 0
-              endelse
-            end
-            2: begin ; Ellipse
-              x = ((data.x * header.xScale + header.xOffset) - easting[j]) * cos(azimuth[j]) - $
-                ((data.y * header.yScale + header.yOffset) - northing[j]) * sin(azimuth[j])
-              y = ((data.x * header.xScale + header.xOffset) - easting[j]) * sin(azimuth[j]) + $
-                ((data.y * header.yScale + header.yOffset) - northing[j]) * cos(azimuth[j])
-              distance = sqrt((x / major_axis[j])^2 + (y / minor_axis[j])^2)
-              index = where(distance LE 1.0, count)
-              if (count GT 0L) then begin
-                dataSub = data[index]
-              endif else begin
-                dataSub = 0
-              endelse
-            end
-            else: return
-          endcase
-          if (size(dataSub, /type) NE 8) then continue
-          
-          ; Generate the header
-          outputHeader = header
-          outputHeader.xMin = min(dataSub.x) * 0.01D
-          outputHeader.xMax = max(dataSub.x) * 0.01D
-          outputHeader.yMin = min(dataSub.y) * 0.01D
-          outputHeader.yMax = max(dataSub.y) * 0.01D
-          outputHeader.zMin = min(dataSub.z) * 0.01D
-          outputHeader.zMax = max(dataSub.z) * 0.01D
-          outputHeader.nPoints = count
-          outputHeader.nReturns = histogram([ishft(ishft(dataSub.nReturn,5),-5)], min=1, max=5)
-          outputHeader.xScale = 0.01D
-          outputHeader.yScale = 0.01D
-          outputHeader.zScale = 0.01D
-          outputHeader.nRecords = 0
-          case outputHeader.pointFormat of
-            0: begin
-              outputHeader.headerSize = 227US
-              outputHeader.dataOffset = 229UL
-              outputHeader.pointLength = 20US
-            end
-            1: begin
-              outputHeader.headerSize = 227US
-              outputHeader.dataOffset = 227UL
-              outputHeader.pointLength = 28US
-            end
-            2: begin
-              outputHeader.headerSize = 227US
-              outputHeader.dataOffset = 227UL
-              outputHeader.pointLength = 26US
-            end
-            3: begin
-              outputHeader.headerSize = 227US
-              outputHeader.dataOffset = 227UL
-              outputHeader.pointLength = 34US
-            end
-            4: begin
-              outputHeader.headerSize = 235US
-              outputHeader.dataOffset = 235UL
-              outputHeader.pointLength = 57US
-              outputHeader.wdp = 0LL
-            end
-            5: begin
-              outputHeader.headerSize = 235US
-              outputHeader.dataOffset = 235UL
-              outputHeader.pointLength = 63US
-              outputHeader.wdp = 0LL
-            end
-          endcase
-          if (total(outputHeader.nReturns) NE outputHeader.nPoints) then begin
-            outputHeader.nReturns[0] += (outputHeader.nPoints - total(outputHeader.nReturns))
-          endif
-          
-          ; Write output
-          outputFile = strtrim(fparts[0],2) + '_' + shape_name + '_' + strtrim(name[j],2) + '.' + fparts[1]
-          WriteLAS, outputFile, outputHeader, dataSub
-          
+        ; Generate the header
+        outputHeader = header
+        outputHeader.xMin = min(dataSub.x) * header.xScale + header.xOffset
+        outputHeader.xMax = max(dataSub.x) * header.xScale + header.xOffset
+        outputHeader.yMin = min(dataSub.y) * header.yScale + header.yOffset
+        outputHeader.yMax = max(dataSub.y) * header.yScale + header.yOffset
+        outputHeader.zMin = min(dataSub.z) * header.zScale + header.zOffset
+        outputHeader.zMax = max(dataSub.z) * header.zScale + header.zOffset
+        outputHeader.nPoints = count
+        outputHeader.nReturns = histogram([ishft(ishft(dataSub.nReturn,5),-5)], min=1, max=5)
+        outputHeader.nRecords = 0
+        case outputHeader.pointFormat of
+          0: begin
+            outputHeader.headerSize = 227US
+            outputHeader.dataOffset = 229UL
+            outputHeader.pointLength = 20US
+          end
+          1: begin
+            outputHeader.headerSize = 227US
+            outputHeader.dataOffset = 227UL
+            outputHeader.pointLength = 28US
+          end
+          2: begin
+            outputHeader.headerSize = 227US
+            outputHeader.dataOffset = 227UL
+            outputHeader.pointLength = 26US
+          end
+          3: begin
+            outputHeader.headerSize = 227US
+            outputHeader.dataOffset = 227UL
+            outputHeader.pointLength = 34US
+          end
+          4: begin
+            outputHeader.headerSize = 235US
+            outputHeader.dataOffset = 235UL
+            outputHeader.pointLength = 57US
+            outputHeader.wdp = 0LL
+          end
+          5: begin
+            outputHeader.headerSize = 235US
+            outputHeader.dataOffset = 235UL
+            outputHeader.pointLength = 63US
+            outputHeader.wdp = 0LL
+          end
+        endcase
+        if (total(outputHeader.nReturns) NE outputHeader.nPoints) then begin
+          outputHeader.nReturns[0] += (outputHeader.nPoints - total(outputHeader.nReturns))
         endif
+        
+        ; Write output
+        outputFile = strtrim(fparts[0],2) + '_' + shape_name + '_' + strtrim(name[index[j]],2) + '.' + fparts[1]
+        WriteLAS, outputFile, outputHeader, dataSub
         
         ; Update progress bar
         bcount += 1

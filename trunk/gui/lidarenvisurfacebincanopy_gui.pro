@@ -180,7 +180,7 @@ PRO LidarENVISurfaceBinCanopy_GUI
   cover_droplist = FSC_Droplist(Base3, Value=coverList, Index=0, title='Method : ')
   height_threshold = FSC_INPUTFIELD(Base3, Title='Fractional Cover > Height Threshold (m) : ', Value=0.5, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base3, value='Height thresold is also used as lower bound of Density Deciles', frame=0, /align_left)
-  height_threshold_top = FSC_INPUTFIELD(Base3, Title='Fractional Cover <= Top Height Threshold (m) : ', Value=0.0, /FloatValue, LabelAlign=1, decimal=2)
+  height_threshold_top = FSC_INPUTFIELD(Base3, Title='Fractional Cover <= Top Height Threshold (m) : ', Value=50.0, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base3, value=' Weights for "Weighted Sum" : ', frame=0, /align_left)
   weight_VegGnd = FSC_INPUTFIELD(Base3, Title=' First Returns Only : ', Value=0.50, /FloatValue, LabelAlign=1, decimal=2)
   weight_Double = FSC_INPUTFIELD(Base3, Title=' First & Last Returns : ', Value=1.00, /FloatValue, LabelAlign=1, decimal=2)
@@ -198,7 +198,8 @@ PRO LidarENVISurfaceBinCanopy_GUI
   text = WIDGET_LABEL(Base4, value='Height percentile is also used as upper bound of Density Deciles', frame=0, /align_left)
   percentile_droplist = FSC_Droplist(Base4, Value=percentileList, Index=0, title='Method : ')
   text = WIDGET_LABEL(Base4, value='Settings for the Cover (Counts) method : ', frame=0, /align_left)
-  vertical_binsize = FSC_INPUTFIELD(Base4, Title='Vertical Bin Size (m) : ', Value=0.15, /FloatValue, LabelAlign=1, decimal=2)
+  vertical_binsize = FSC_INPUTFIELD(Base4, Title='Vertical Bin Size (m) : ', Value=0.5, /FloatValue, LabelAlign=1, decimal=2)
+  text = WIDGET_LABEL(Base4, value='Vertical Bin Size is also used for fractional cover and apparent foliage profiles', frame=0, /align_left)
   
   tlb5 = widget_base(tlb, column=1, xsize=!QRSC_LIDAR_XSIZE)
   text5 = WIDGET_LABEL(tlb5, value='Settings Unique to Intensity Derived Products', frame=0, /align_center, XOFFSET=5)

@@ -96,12 +96,6 @@ PRO LASmerge, inFiles, outFile, new_psid=new_psid, buffer=buffer
   day = julday(date[1],date[2],date[0]) - julday(1,1,date[0]) + 1
   outputHeader.day  = uint(day)
   outputHeader.year = uint(date[0])
-  outputHeader.xScale = 0.01D
-  outputHeader.yScale = 0.01D
-  outputHeader.zScale = 0.01D
-  outputHeader.xOffset = 0D
-  outputHeader.yOffset = 0D
-  outputHeader.zOffset = 0D
   outputHeader.nPoints = 0
   WriteLAS, outFile, outputHeader, /nodata
   openw, outputLun, outFile, /get_lun, /swap_if_big_endian, /append
@@ -163,6 +157,17 @@ PRO LASmerge, inFiles, outFile, new_psid=new_psid, buffer=buffer
     
     ; Add a new PSID if necessary
     if keyword_set(new_psid) then data.source = i+1L
+    
+    ; Check data scaling is the same
+    if logical_or(outputHeader.xScale ne header.xScale, outputHeader.xOffset ne header.xOffset) then begin
+      data.x = ((data.x * header.xScale + header.xOffset) - outputHeader.xOffset) / outputHeader.xScale
+    endif
+    if logical_or(outputHeader.yScale ne header.yScale, outputHeader.yOffset ne header.yOffset) then begin
+      data.y = ((data.y * header.yScale + header.yOffset) - outputHeader.yOffset) / outputHeader.yScale
+    endif    
+    if logical_or(outputHeader.zScale ne header.zScale, outputHeader.zOffset ne header.zOffset) then begin
+      data.z = ((data.z * header.zScale + header.zOffset) - outputHeader.zOffset) / outputHeader.zScale
+    endif  
     
     ; Write the data
     writeu, outputLun, data
