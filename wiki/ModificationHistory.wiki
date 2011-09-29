@@ -1,5 +1,10 @@
 = RSC LAS Tools Modification History =
 
+==Version 1.7 - 29/9/2011==
+  * Fixed a several bugs reported in Version 1.6
+  * Added a fractional cover and apparent foliage profiles to raster products
+  * Changed some default values used for canopy metric products
+
 ==Version 1.6 - 25/9/2011==
   * Added a check box to use the proper temp directory for the operating system (uncheck to use to directory the LAS data is in)
   * Fixed several bugs and made a number of improvements to the code for above-ground height LAS file generation
