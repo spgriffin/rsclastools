@@ -73,13 +73,23 @@
 ;
 ;###########################################################################
 
-FUNCTION getStatistic, data, method, null, area
+FUNCTION getStatistic, data, method, null, area, limits=limits
 
   ; Error handling
   catch, theError
   if theError ne 0 then begin
     catch, /cancel
     return, null
+  endif
+  
+  ; Determine data subset to use
+  if keyword_set(limits) then begin
+    index = where(logical_and(data ge limits[0], data le limits[1]), count)
+    if (count gt 0) then begin
+      data = data[index]
+    endif else begin
+      return, null
+    endelse
   endif
   
   ; Derive metric

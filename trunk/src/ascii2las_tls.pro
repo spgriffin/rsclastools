@@ -144,6 +144,7 @@ PRO Ascii2LAS_TLS, infile
         psid += 1US
         continue
       endif
+      if (nparts le 4) then continue
       
       ; Write first return
       las_data.x = ulong(lparts[0] / 0.01D)

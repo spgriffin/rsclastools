@@ -161,6 +161,8 @@ PRO LidarENVISurfaceBinStatistic_GUI
   return_droplist = FSC_Droplist(Base2, Value=returnList, Index=0, title='Return type : ')
   class_droplist = FSC_Droplist(Base2, Value=classList, Index=2, title='Return classification : ')
   field_droplist = FSC_Droplist(Base2, Value=fieldList, Index=0, title='Data : ')
+  minVal = FSC_INPUTFIELD(Base2, Title='Minimum value to consider : ', Value=-9999.0, /FloatValue, LabelAlign=1, decimal=2)
+  maxVal = FSC_INPUTFIELD(Base2, Title='Maximum value to consider : ', Value=9999.0, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base2, value='For selected LAS files : ', frame=0, /align_left)
   fields = ['Create a single surface from all LAS files', 'Create a separate surface for each LAS file']
   surfacetype = cw_bgroup(Base2, fields, column=1, /exclusive, set_value=0)
@@ -204,6 +206,8 @@ PRO LidarENVISurfaceBinStatistic_GUI
     yMax:yMax, $ ; y bounds
     xMin:xMin, $ ; x bounds
     yMin:yMin, $ ; y bounds
+    minVal:minVal, $ ; minimum value to consider
+    maxVal:maxVal, $ ; maximum value to consider
     null:null, $ ; null value
     zone:zone, $ ; MGA/UTM zone
     hemiList:hemiList, $ ; UTM hemisphere list
