@@ -76,7 +76,7 @@
 FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, productOptions
 
   ; Keywords
-  forward_function filterReturns, hist_nd, ProfileStatistics, HeightCoverMetric, TerrainMetric
+  forward_function filterReturns, hist_nd, getStatistic, HeightCoverMetric, TerrainMetric
   
   ; Read the data
   tIndex = where(tileStruct.col EQ col_n AND tileStruct.row EQ row_n)
@@ -184,7 +184,7 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
         case productType of
           'Statistic': begin
             area = float(resolution)^2
-            surf[idx[0],idx[1],*] = ProfileStatistics(field[index[ri[ri[i]:ri[i+1L]-1L]]], productOptions.method, null, area)
+            surf[idx[0],idx[1],*] = getStatistic(field[index[ri[ri[i]:ri[i+1L]-1L]]], productOptions.method, null, area, limits=productOptions.limits)
           end
           'Canopy Metric': begin
             subfirst = filterReturns(data[ri[ri[i]:ri[i+1L]-1L]], type=1, n=1)

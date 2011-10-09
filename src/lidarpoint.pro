@@ -76,9 +76,9 @@
 PRO LidarPoint, infile, ProductType, StatsType, $
     ReturnType, unit, height_threshold, weights, null, no_obs, percentile, $
     rhovg_method, rhovg_percentile, constant, interval, max_height, metrictype, $
-    height_threshold_top=height_threshold_top, vbinsize=vbinsize
+    height_threshold_top=height_threshold_top, vbinsize=vbinsize, limits=limits
     
-  forward_function ProfileStatistics, filterReturns, CalibrateCover, CanopyMetric, TerrainMetric
+  forward_function getStatistic, filterReturns, CalibrateCover, CanopyMetric, TerrainMetric
   
   ; Start progress bar
   bcount = 0.0
@@ -226,8 +226,7 @@ PRO LidarPoint, infile, ProductType, StatsType, $
         endif else begin
           array = height[index]
         endelse
-        index = where((array GE height_threshold) AND (array LE max_height), count)
-        value =  (count GT 0) ? ProfileStatistics(array[index], StatsType, null, area) : null
+        value =  (count GT 0) ? getStatistic(array, StatsType, null, area, limits=limits) : null
       end
     endcase
     

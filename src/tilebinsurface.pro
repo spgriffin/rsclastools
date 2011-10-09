@@ -208,28 +208,24 @@ PRO TileBinSurface, lasfiles, resolution=resolution, zone=zone, tilesize=tilesiz
     if (count gt 0) then file_delete, tileStruct.name[index], /quiet
     
     ; Write the ENVI header file
-    
     case productType of
       'Statistic': productBandNames = productOptions.method
       'Canopy Metric': begin
-        switch productOptions.method of
+        case productOptions.method of
           'Density Deciles': begin
             locations = lindgen(nbands) + 1
             productBandNames = strjoin(strcompress('D'+string(locations,format='(I02)'),/remove_all),',')
-            break
           end
           'Fractional Cover Profile': begin
             locations = findgen(nbands) * productOptions.vbinsize - productOptions.vbinsize
             productBandNames = strjoin(strcompress('Height '+string(locations,format='(F6.2)'),/remove_all),',')
-            break
           end
           'Apparent Foliage Profile': begin
             locations = findgen(nbands) * productOptions.vbinsize - productOptions.vbinsize
             productBandNames = strjoin(strcompress('Height '+string(locations,format='(F6.2)'),/remove_all),',')
-            break
           end
           else: productBandNames = productOptions.method
-        endswitch
+        endcase
       end
       'Terrain Metric': productBandNames = productOptions.method
     endcase

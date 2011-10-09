@@ -89,6 +89,8 @@ PRO ENVISurfaceBinRasterStatistic_start, event
   resolution = info.resolution->Get_Value()
   zone = info.zone->Get_Value()
   null = info.null->Get_Value()
+  minVal = info.minVal->Get_Value()
+  maxVal = info.maxVal->Get_Value()
   tilexsize = info.tilexsize->Get_Value()
   tileysize = info.tileysize->Get_Value()
   Widget_Control, info.surfacetype, Get_Value=surfacetype
@@ -106,7 +108,7 @@ PRO ENVISurfaceBinRasterStatistic_start, event
     info.projList[2]: proj = 'UTM'
   endcase
   Widget_Control, event.top, /Destroy
-  productOptions = {method:productType,returnType:returnType,field:fieldType,class:classType}
+  productOptions = {method:productType,returnType:returnType,field:fieldType,class:classType,limits:[minVal,maxVal]}
   TileBinSurface, info.infile, resolution=resolution, zone=zone, tilesize=[tilexsize,tileysize], null=null, hemisphere=hemisphere, $
     proj=proj, productType='Statistic', separate=surfacetype, productOptions=productOptions,tmp=tmp
     
