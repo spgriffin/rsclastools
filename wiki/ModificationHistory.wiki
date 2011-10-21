@@ -1,5 +1,9 @@
 = RSC LAS Tools Modification History =
 
+==Version 1.8 - 3/10/2011==
+  * Added min/max bounds to statistic product calculation
+  * Fixed a bug in the TLS PTS file import.
+
 ==Version 1.7 - 29/9/2011==
   * Fixed a several bugs reported in Version 1.6
   * Added fractional cover and apparent foliage profiles to raster products
