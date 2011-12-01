@@ -1,8 +1,13 @@
 = RSC LAS Tools Modification History =
 
+==Version 1.9 - 30/11/2011==
+  * Added Classification, Scan Angle Rank and Source ID to interpolated raster product options
+  * Fixed a bug in the LAS to ASCII exporter
+  * Added option to exclude building and/or water when generating canopy and statistic point/raster products
+
 ==Version 1.8 - 3/10/2011==
   * Added min/max bounds to statistic product calculation
-  * Fixed a bug in the TLS PTS file import.
+  * Fixed a bug in the TLS PTS file import
 
 ==Version 1.7 - 29/9/2011==
   * Fixed a several bugs reported in Version 1.6
