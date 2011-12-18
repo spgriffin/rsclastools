@@ -99,7 +99,7 @@ FUNCTION TerrainMetric, elevation, easting, northing, productType, null
       if (count GT 3) then begin
         ;coeff = svdfit(transpose([[easting], [northing]]), 2, elevation, status=status)
         coeff = regress(transpose([[easting], [northing]]), elevation, status=status)
-        metric = (status EQ 0) ? atan(coeff[0], coeff[1]) * !radeg + ((coeff[1] lt 0.0) * 360.0) : null
+        metric = (status EQ 0) ? atan(coeff[1], coeff[2]) * !radeg + ((coeff[1] lt 0.0) * 360.0) : null
       endif else begin
         metric = null
       endelse

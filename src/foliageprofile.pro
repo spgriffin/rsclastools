@@ -104,17 +104,17 @@ PRO FoliageProfile, infile, type, null, binsize, height_threshold, rhovg_method,
   for i = 0L, n_elements(infile)-1L do begin
   
     ; Read the input file and get veg heights
-    ReadLAS, infile[i], header, data
+    ReadLAS, infile[i], header, data, /check
     fparts = strsplit(infile[i], '.', /extract)
     progressBar -> SetProperty, Text=strtrim(infile[i],2)
     
     ; Get heights
     case string(header.systemID) of
       'Height: Source': begin
-        height = data.source * 0.01
+        height = data.(8) * 0.01
       end
       'Height: Elev': begin
-        height = data.z * header.zScale + header.zOffset
+        height = data.(2) * header.zScale + header.zOffset
       end
       else: begin
         progressBar->Destroy
@@ -130,28 +130,21 @@ PRO FoliageProfile, infile, type, null, binsize, height_threshold, rhovg_method,
       height = height[no_birds]
     endif
     first = filterReturns(data, type=1, n=1)
-    iFC = HeightProfile(height, data.inten, first, null, binsize, height_threshold, rhovg_method, rhovg_percentile, $
+    iFC = HeightProfile(height, data.(3), first, null, binsize, height_threshold, rhovg_method, rhovg_percentile, $
       counts, locations, rhov_rhog, constant, count_profile, intensity_profile)
-      
+    if (iFC[0] EQ null) then continue
+    
     ; Set profile type
-    if (type eq 1) then begin
-      if (n_elements(count_profile) eq 0) then begin
-        continue
-      endif else begin
-        profile = temporary(count_profile)
-      endelse
-    endif else begin
-      if (n_elements(intensity_profile) eq 0) then begin
-        continue
-      endif else begin
-        profile = temporary(intensity_profile)
-      endelse
-    endelse
+    case type of
+      1: profile = temporary(count_profile)
+      2: profile = temporary(intensity_profile)
+      else: return
+    endcase
     
     ; Write output
     outputFile = strtrim(fparts[0],2) + '_VerticalProfile_' + name + '.csv'
     openw, lun, outputFile, /get_lun
-    printf, lun, '"Height (m)","Fractional Cover","Gap Probability (P)","Waveform (dP/dz)","Apparant Foliage Profile (dlog(P)/dz)","Relative Apparant Foliage Profile"'
+    printf, lun, '"Height","Fractional_Cover","Cumulative","Apparant","Derivative","Relative"'
     dims = size(profile, /dimensions)
     for j = 0L, dims[1] - 1L do begin
       line = [reform(string(profile[*,j], format='(f12.6)'))]

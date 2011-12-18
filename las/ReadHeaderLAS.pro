@@ -73,26 +73,19 @@
 ;
 ;###########################################################################
 
-pro ReadHeaderLAS, inputFile, header
+pro ReadHeaderLAS, inputFile, header, pointFormat=pointFormat
 
-  compile_opt idl2
-  forward_function InitHeaderLAS
+  compile_opt idl2;, logical_predicate
   
-  ; Create the header structure without WDP record
-  header = InitHeaderLAS()
+  ; Create the header structure
+  if not keyword_set(pointFormat) then pointFormat = 1
+  header = InitHeaderLAS(pointFormat=pointFormat)
   
   ; Open the file and read the header from it
+  
   openr, inputLun, inputFile, /get_lun, /swap_if_big_endian
   readu, inputLun, header
-  
-  ; Add the SDP record if necessary
-  if (header.versionMinor eq 3) then begin
-     wdp = 0ULL
-     readu, inputLun, wdp
-     header = create_struct(header, 'wdp', wdp)
-  endif
-  
-  ; Close the input file
   free_lun, inputLun
+  
   
 end

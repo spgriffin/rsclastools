@@ -103,10 +103,7 @@ PRO LidarENVISurfaceBinStatistic_GUI
   ; Create list of return units
   fieldList = ['Elevation', $
     'Intensity', $
-    'Height', $
-    'Red', $
-    'Green', $
-    'Blue']
+    'Height']
     
   ; Create list of classes
   classList = ['Ground', $
@@ -150,10 +147,10 @@ PRO LidarENVISurfaceBinStatistic_GUI
   file_bm = replicate(0B,16,16,3)
   for i = 0L, nFiles-1L, 1L do begin
     wtFile = WIDGET_TREE(wtRoot, VALUE=infile_bn[i], /FOLDER, /EXPANDED, BITMAP=file_bm)
-    wtLeaf = WIDGET_TREE(wtFile, VALUE='UL Easting : ' + strtrim(string(xMin[i],format='(f10.2)'),2), UVALUE='ChangeBounds')
-    wtLeaf = WIDGET_TREE(wtFile, VALUE='UL Northing : ' + strtrim(string(yMax[i],format='(f10.2)'),2), UVALUE='ChangeBounds')
-    wtLeaf = WIDGET_TREE(wtFile, VALUE='LR Easting : ' + strtrim(string(xMax[i],format='(f10.2)'),2), UVALUE='ChangeBounds')
-    wtLeaf = WIDGET_TREE(wtFile, VALUE='LR Northing : ' + strtrim(string(yMin[i],format='(f10.2)'),2), UVALUE='ChangeBounds')
+    wtLeaf = WIDGET_TREE(wtFile, VALUE='UL Easting : ' + strtrim(string(xMin[i],format='(f10.2)'),2))
+    wtLeaf = WIDGET_TREE(wtFile, VALUE='UL Northing : ' + strtrim(string(yMax[i],format='(f10.2)'),2))
+    wtLeaf = WIDGET_TREE(wtFile, VALUE='LR Easting : ' + strtrim(string(xMax[i],format='(f10.2)'),2))
+    wtLeaf = WIDGET_TREE(wtFile, VALUE='LR Northing : ' + strtrim(string(yMin[i],format='(f10.2)'),2))
   endfor
   text2 = WIDGET_LABEL(tlb, value='Product Settings', frame=0, /align_center)
   Base2 = widget_base(tlb, column=1, frame=1)
@@ -161,8 +158,6 @@ PRO LidarENVISurfaceBinStatistic_GUI
   return_droplist = FSC_Droplist(Base2, Value=returnList, Index=0, title='Return type : ')
   class_droplist = FSC_Droplist(Base2, Value=classList, Index=2, title='Return classification : ')
   field_droplist = FSC_Droplist(Base2, Value=fieldList, Index=0, title='Data : ')
-  minVal = FSC_INPUTFIELD(Base2, Title='Minimum value to consider : ', Value=-9999.0, /FloatValue, LabelAlign=1, decimal=2)
-  maxVal = FSC_INPUTFIELD(Base2, Title='Maximum value to consider : ', Value=9999.0, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base2, value='For selected LAS files : ', frame=0, /align_left)
   fields = ['Create a single surface from all LAS files', 'Create a separate surface for each LAS file']
   surfacetype = cw_bgroup(Base2, fields, column=1, /exclusive, set_value=0)
@@ -176,8 +171,9 @@ PRO LidarENVISurfaceBinStatistic_GUI
   hemi_droplist = FSC_Droplist(Base1, Value=hemiList, Index=0, title='UTM hemisphere : ')
   tilexsize = FSC_INPUTFIELD(Base1, Title='X tile size (m) : ', Value=100, /IntegerValue, /Positive, LabelAlign=1)
   tileysize = FSC_INPUTFIELD(Base1, Title='Y tile size (m) : ', Value=100, /IntegerValue, /Positive, LabelAlign=1)
-  fields = ['Use system directory for temporary files']
-  tmpflag = cw_bgroup(Base1, fields, /nonexclusive, SET_VALUE=[1])
+  text = WIDGET_LABEL(Base1, value='Output file format : ', frame=0, /align_left)
+  format_fields = ['ENVI', 'GeoTIFF']
+  formats = cw_bgroup(Base1, format_fields, column=2, /exclusive, set_value=0)
   
   Base3 = widget_base(tlb, column=1)
   text = WIDGET_LABEL(Base3, value='Information', frame=0, /align_center)
@@ -206,8 +202,6 @@ PRO LidarENVISurfaceBinStatistic_GUI
     yMax:yMax, $ ; y bounds
     xMin:xMin, $ ; x bounds
     yMin:yMin, $ ; y bounds
-    minVal:minVal, $ ; minimum value to consider
-    maxVal:maxVal, $ ; maximum value to consider
     null:null, $ ; null value
     zone:zone, $ ; MGA/UTM zone
     hemiList:hemiList, $ ; UTM hemisphere list
@@ -220,7 +214,7 @@ PRO LidarENVISurfaceBinStatistic_GUI
     classList:classList, $ ;Class type
     fieldList:fieldList, $ ;Field type
     projList:projList, $ ; Projection types
-    tmpflag:tmpflag, $ ; temp file flag
+    formats:formats, $ ; File format
     surfacetype:surfacetype} ; Single or separate surfaces
   XManager, 'RSC_LAS_Tools', tlb, /No_Block
   

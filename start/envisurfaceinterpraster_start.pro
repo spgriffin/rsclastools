@@ -85,7 +85,6 @@ PRO ENVISurfaceInterpRaster_start, event
   t = systime(1)
   
   ; Derive product
-  Widget_Control, info.tmpflag, Get_Value=tmp
   resolution = info.resolution->Get_Value()
   zone = info.zone->Get_Value()
   null = info.null->Get_Value()
@@ -115,20 +114,22 @@ PRO ENVISurfaceInterpRaster_start, event
     info.productList[2]: productType = 'Height'
   endcase
   case info.proj_droplist->GetSelection() of
-    info.projList[0]: proj = 'MGA94'
-    info.projList[1]: proj = 'BNG'
-    info.projList[2]: proj = 'UTM'
+    info.projList[0]: proj = 0
+    info.projList[1]: proj = 1
+    info.projList[2]: proj = 2
   endcase
+  Widget_Control, info.formats, Get_Value=formats
+  outFormat = (formats eq 1) ? 'GeoTIFF' : 'ENVI'
   Widget_Control, event.top, /Destroy
   TileInterpolateSurface, info.infile, method=method, resolution=resolution, zone=zone, tilesize=[tilexsize,tileysize], null=null, hemisphere=hemisphere, $
-    min_points=min_points, sectors=sectors, smoothing=smoothing, proj=proj, productType=productType, separate=surfacetype, tmp=tmp
+    min_points=min_points, sectors=sectors, smoothing=smoothing, proj=proj, productType=productType, separate=surfacetype, $
+    outFormat=outFormat
     
   ; Write to and close log file
   printf, loglun, 'Time required: ', systime(1) - t, ' seconds'
   printf, loglun, 'Memory required: ', memory(/highwater) - start_mem, ' bytes'
   printf, loglun, 'Spatial resolution: ', resolution, ' m'
   printf, loglun, 'Interpolation method: ', method
-  printf, loglun, 'Tile size: ', tilexsize, tileysize, ' m'
   free_lun, loglun
   
   ; Make file directory cwd

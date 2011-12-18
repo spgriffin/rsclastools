@@ -91,7 +91,7 @@ FUNCTION HeightProfile, height, intensity, first, null, binsize, height_threshol
   if (veg_cnt EQ 0) then return, 0.0
   
   ; Bin the height data
-  counts = histogram(height[veg_idx], binsize=binsize, locations=locations, min=-binsize, max=ceil(max(height)), reverse_indices=ri)
+  counts = histogram(height[veg_idx], binsize=binsize, locations=locations, min=0.0, max=ceil(max(height)), reverse_indices=ri)
   
   ; Get the intensity profile
   iProfile = float(counts)
@@ -103,24 +103,17 @@ FUNCTION HeightProfile, height, intensity, first, null, binsize, height_threshol
   ; ****************** Do count metrics ********************
   
   ; Determine foliage profile metrics if necessary
-  ;'"Height","Fractional_Cover","Cum_Pgap","Derivative","Apparant","Relative"'
-  nBins = n_elements(locations)
   if arg_present(count_profile) then begin
-    count_profile = fltarr(6, nBins)
-    ; height
+    count_profile = fltarr(6, n_elements(locations))
     count_profile[0,*] = locations
-    ; fractional cover
-    count_profile[1,*] = float(counts) / float(gnd_cnt+veg_cnt)
-    ; cumulative GAP FRACTION (1 at top of canopy)
-    count_profile[2,*] = 1.0-reverse(total(reverse(reform(count_profile[1,*])), 0, /cumulative, /NAN))
-    ; derivative
-    count_profile[3,1:nBins-1] = (count_profile[2,1:nBins-1] - count_profile[2,0:nBins-2]) / binsize
-    ; apparent
-    idx = where(count_profile[2,*] lt 1, cnt, complement=null_idx,ncomplement=null_count)
-    count_profile[4,1:nBins-1] = (alog(count_profile[2,1:nBins-1]) - alog(count_profile[2,0:nBins-2])) / binsize
-    if (null_count gt 0) then count_profile[4,null_idx] = 0.0
-    ;relative
-    count_profile[5,*] = count_profile[4,*] / total(count_profile[4,*], /NAN)
+    count_profile[1,*] = float(counts) / total(counts)
+    count_profile[2,*] = 1D - total(count_profile[1,*], /cumulative)
+    idx = where(count_profile[2,*] GT 0, cnt)
+    if (cnt EQ 0) then return, null
+    count_profile[3,idx] = -alog(count_profile[2,idx])
+    count_profile[4,*] = abs((count_profile[3,*] - shift(count_profile[3,*], 1)) / (locations - shift(locations, 1)))
+    count_profile[4,0] = 0.0
+    count_profile[5,0] = count_profile[4,*] / total(count_profile[4,*])
   endif
   
   ; Don't go any further if there is no ground returns (required to calculate rhov_rhog)
@@ -152,21 +145,16 @@ FUNCTION HeightProfile, height, intensity, first, null, binsize, height_threshol
   
   ; Determine foliage profile metrics if necessary
   if arg_present(intensity_profile) then begin
-    intensity_profile = fltarr(6, nBins)
-    ; height
+    intensity_profile = fltarr(6, n_elements(locations))
     intensity_profile[0,*] = locations
-    ; fractional cover
     intensity_profile[1,*] = iFC
-    ; cumulative GAP FRACTION (1 at top of canopy)
-    intensity_profile[2,*] = 1.0-reverse(total(reverse(reform(count_profile[1,*])), 0, /cumulative, /NAN))
-    ; derivative
-    intensity_profile[3,1:nBins-1] = (intensity_profile[2,1:nBins-1] - intensity_profile[2,0:nBins-2]) / binsize
-    ; apparent
-    idx = where(intensity_profile[2,*] lt 1, cnt, complement=null_idx,ncomplement=null_count)
-    intensity_profile[4,1:nBins-1] = (alog(intensity_profile[2,1:nBins-1]) - alog(intensity_profile[2,0:nBins-2])) / binsize
-    if (null_count gt 0) then intensity_profile[4,null_idx] = 0.0
-    ;relative
-    intensity_profile[5,0] = intensity_profile[4,*] / total(intensity_profile[4,*], /NAN)
+    intensity_profile[2,*] = 1.0 - total(iFC, /cumulative)
+    idx = where(intensity_profile[2,*] GT 0.0, cnt)
+    if (cnt EQ 0) then return, iFC
+    intensity_profile[3,idx] = -alog(intensity_profile[2,idx])
+    intensity_profile[4,*] = abs((intensity_profile[3,*] - shift(intensity_profile[3,*], 1)) / (locations - shift(locations, 1)))
+    intensity_profile[4,0] = 0.0
+    intensity_profile[5,0] = intensity_profile[4,*] / total(intensity_profile[4,*])
   endif
   
   ; Return result

@@ -81,7 +81,6 @@ PRO LidarTile_start, event
   tileXsize = info.field1->Get_Value()
   tileYsize = info.field2->Get_Value()
   Widget_Control, info.mergeflag, Get_Value=mergeflag
-  Widget_Control, info.tmpflag, Get_Value=tmp
   Widget_Control, event.top, /Destroy
   resolution = 1.0
   
@@ -91,7 +90,7 @@ PRO LidarTile_start, event
   progressBar=Obj_New('progressbar', Color='Forest Green', Text='Tiling LAS file...', title='Spatial Tiling', /fast_loop)
   progressBar->Start
   if (mergeflag eq 1) then begin
-    tileStruct= SurfaceTile(info.infile, tileXsize=tileXsize,tileYsize=tileYsize, resolution=resolution, tmp=tmp)
+    tileStruct= SurfaceTile(info.infile, tileXsize=tileXsize,tileYsize=tileYsize, resolution=resolution)
     bcount += 1
     if progressBar->CheckCancel() then begin
       ok=Dialog_Message('Tiling cancelled')
@@ -101,7 +100,7 @@ PRO LidarTile_start, event
     progressbar->Update,(float(bcount)/btotal)*100.0
   endif else begin
     for i = 0L, n_elements(info.infile)-1L, 1L do begin
-      tileStruct= SurfaceTile(info.infile[i], tileXsize=tileXsize,tileYsize=tileYsize, resolution=resolution,tmp=tmp)
+      tileStruct= SurfaceTile(info.infile[i], tileXsize=tileXsize,tileYsize=tileYsize, resolution=resolution)
       bcount += 1
       if progressBar->CheckCancel() then begin
         ok=Dialog_Message('Tiling cancelled')

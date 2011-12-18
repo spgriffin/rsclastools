@@ -76,9 +76,9 @@
 PRO LidarPoint, infile, ProductType, StatsType, $
     ReturnType, unit, height_threshold, weights, null, no_obs, percentile, $
     rhovg_method, rhovg_percentile, constant, interval, max_height, metrictype, $
-    height_threshold_top=height_threshold_top, vbinsize=vbinsize, limits=limits
+    height_threshold_top=height_threshold_top, vbinsize=vbinsize
     
-  forward_function getStatistic, filterReturns, CalibrateCover, CanopyMetric, TerrainMetric
+  forward_function ProfileStatistics, filterReturns, CalibrateCover, CanopyMetric, TerrainMetric
   
   ; Start progress bar
   bcount = 0.0
@@ -111,9 +111,6 @@ PRO LidarPoint, infile, ProductType, StatsType, $
       percentile_str = string(percentile*100.0,format='(I03)')
       product_name = percentile_str + product_name
     endif
-    if (p_parts[0] eq 'DensityDeciles') then begin
-      product_name = strcompress(strjoin('D'+string(lindgen(10),format='(I02)'),','),/remove_all)
-    endif
   endelse
   outputDir = file_dirname(infile[0], /mark_directory)
   returnType_str = strcompress(strjoin(strsplit(returnType, '()', /extract)), /remove_all)
@@ -126,18 +123,18 @@ PRO LidarPoint, infile, ProductType, StatsType, $
   
     ; Read the input file and get veg heights
     progressBar -> SetProperty, Text = strtrim(infile[j], 2)
-    ReadLAS, infile[j], header, data
-    if (min(data.class) EQ 0) then begin
+    ReadLAS, infile[j], header, data, /check
+    if (min(data.(5)) EQ 0) then begin
       ok = dialog_message(infile[j] + ': Unclassified returns', /error)
       continue
     endif
     if (statsType NE 'Terrain') then begin
       case string(header.systemID) of
         'Height: Source': begin
-          height = data.source * 0.01
+          height = data.(8) * 0.01
         end
         'Height: Elev': begin
-          height = data.z * header.zScale + header.zOffset
+          height = data.(2) * header.zScale + header.zOffset
         end
         else: begin
           progressBar->Destroy
@@ -205,14 +202,14 @@ PRO LidarPoint, infile, ProductType, StatsType, $
           weights, null, percentile, rhovg_method, rhovg_percentile, constant, interval, height_threshold_top=height_threshold_top, vbinsize=vbinsize)
       end
       'Terrain': begin
-        value = TerrainMetric(data[index].z * header.zScale + header.zOffset, $
-          data[index].x * header.xScale + header.xOffset, $
-          data[index].y * header.yScale + header.yOffset, $
+        value = TerrainMetric(data[index].(2) * header.zScale + header.zOffset, $
+          data[index].(0) * header.xScale + header.xOffset, $
+          data[index].(1) * header.yScale + header.yOffset, $
           productType, null)
       end
       else: begin
         if (statsType EQ 'Density') then begin
-          ConvexHull, data[index].x * header.xScale + header.xOffset, data[index].y * header.xScale + header.xOffset, px, py
+          ConvexHull, data[index].(0) * header.xScale + header.xOffset, data[index].(1) * header.xScale + header.xOffset, px, py
           extent = Obj_New('IDLanROI', px, py)
           status = extent->IDLanROI::ComputeGeometry(area=area)
           if (status EQ 0) then area = null
@@ -226,7 +223,8 @@ PRO LidarPoint, infile, ProductType, StatsType, $
         endif else begin
           array = height[index]
         endelse
-        value =  (count GT 0) ? getStatistic(array, StatsType, null, area, limits=limits) : null
+        index = where((array GE height_threshold) AND (array LE max_height), count)
+        value =  (count GT 0) ? ProfileStatistics(array[index], StatsType, null, area) : null
       end
     endcase
     
@@ -236,8 +234,7 @@ PRO LidarPoint, infile, ProductType, StatsType, $
     endif
     
     ; Write the result to ASCII
-    valueStr = strjoin(string(value, format='(f9.3)'), ',')
-    line = [file_basename(infile[j]), valueStr, strtrim(count, 2)]
+    line = [file_basename(infile[j]), string(value, format='(f9.3)'), strtrim(count, 2)]
     line = strcompress(strjoin(line, ','), /remove_all)
     printf, lun, line
     

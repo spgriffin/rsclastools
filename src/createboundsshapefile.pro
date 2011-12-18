@@ -74,9 +74,8 @@
 ;
 ;###########################################################################
 
-PRO CreateBoundsShapefile, outfile, xcoords, ycoords, zcoord, name, kml=kml, in_proj=in_proj, out_proj=out_proj, zone=zone, hemisphere=hemisphere
-  
-  compile_opt idl2
+PRO CreateBoundsShapefile, outfile, xcoords, ycoords, name, kml=kml, in_proj=in_proj, out_proj=out_proj, zone=zone, hemisphere=hemisphere
+
   forward_function ReprojectCoords
   
   ; Keywords
@@ -113,8 +112,8 @@ PRO CreateBoundsShapefile, outfile, xcoords, ycoords, zcoord, name, kml=kml, in_
     printf, lun, '<LinearRing>'
     printf, lun, '<coordinates>'
     
-    for i = 0L, n_elements(xcoords)-1L, 1L do begin
-      printf, lun, strjoin([strtrim(lnglat[0,i], 2),strtrim(lnglat[1,i], 2),zcoord], ',')
+    for i = 0L, n_elements(xout)-1L, 1L do begin
+      printf, lun, strjoin([strtrim(lnglat[0,i], 2),strtrim(lnglat[1,i], 2),'0'], ',')
     endfor
     
     printf, lun, '</coordinates>'
@@ -129,18 +128,14 @@ PRO CreateBoundsShapefile, outfile, xcoords, ycoords, zcoord, name, kml=kml, in_
   endif else begin
   
     ; Convert the coordinates to lat/long
-    vertices = ReprojectCoords(xcoords, ycoords, in_proj, out_proj, zone=zone, hemisphere=hemisphere)
-    ;vertices = transpose([[xyout[0,*]],[xyout[1,*]]])
+    xyout = ReprojectCoords(x_coords, y_coords, in_proj, out_proj, zone=zone, hemisphere=hemisphere)
+    vertices = transpose([[xyout[0,*]],[xyout[1,*]]])
     
     ;Create the shapefile and define the entity type as Polygon
     mynewshape=OBJ_NEW('IDLffShape', outfile + '.shp', /update, entity_type=5)
     
     ;Set the attribute definitions for the Shapefile
     mynewshape->AddAttribute, 'NAME', 7, 100
-    mynewshape->AddAttribute, 'AREA', 5, 12, precision=3
-    mynewshape->AddAttribute, 'CENTRE_X', 5, 10, precision=3
-    mynewshape->AddAttribute, 'CENTRE_Y', 5, 12, precision=3
-    mynewshape->AddAttribute, 'PERIMETER', 5, 12, precision=3
     
     ;Create structure for the entity
     entNew = {IDL_SHAPE_ENTITY}
@@ -155,20 +150,11 @@ PRO CreateBoundsShapefile, outfile, xcoords, ycoords, zcoord, name, kml=kml, in_
     p_vertices = ptr_new(vertices)
     entNew.VERTICES = p_vertices
     
-    ; Calculate attributes
-    extentObj = Obj_New('IDLanROI', vertices[0,*], vertices[1,*])
-    status = extentObj->IDLanROI::ComputeGeometry(AREA=las_area, CENTROID=las_centroid, PERIMETER=las_perimeter)
-    Obj_Destroy, extentObj
-    
     ;Create structure for the attributes
     attrNew = mynewshape ->GetAttributes(/attribute_structure)
     
     ;Define the values for the attributes
     attrNew.ATTRIBUTE_0 = name
-    attrNew.ATTRIBUTE_1 = las_area
-    attrNew.ATTRIBUTE_2 = las_centroid[0]
-    attrNew.ATTRIBUTE_3 = las_centroid[1]
-    attrNew.ATTRIBUTE_4 = las_perimeter
     
     ;Add the new entity to the shapefile
     mynewshape -> PutEntity, entNew

@@ -90,7 +90,7 @@ PRO Ascii2LAS_TLS, infile
   for i = 0L, n_elements(infile) - 1L do begin
   
     ; Start progress bar
-    bcount = 0ULL
+    bcount = 0
     progressBar=Obj_New('progressbar', Color='Forest Green', Text='Converting PTS to LAS...', title=infile[i], /fast_loop)
     progressBar->Start
     progressBar -> SetProperty, Text=strtrim(infile[i],2)
@@ -99,7 +99,7 @@ PRO Ascii2LAS_TLS, infile
     fparts = strsplit(infile[i], '.', /extract)
     outputFile = fparts[0] + '.las'
     las_data = InitDataLAS(pointFormat=2)
-    outputHeader = InitHeaderLAS(pointFormat=2,versionMinor=2)
+    outputHeader = InitHeaderLAS(pointFormat=2)
     outputHeader.systemID = byte('PTS import')
     outputHeader.xScale = 0.01D
     outputHeader.yScale = 0.01D
@@ -131,12 +131,12 @@ PRO Ascii2LAS_TLS, infile
     
     ; Read the ASCII file by line
     psid = 0US
-    for k = 0ULL, no_lines-1ULL, 1ULL do begin
+    for k = 0L, no_lines-1L, 1L do begin
     
       ; Initialise record
       dataTemp = ''
       readf, lun, dataTemp
-      ;dataTemp = strtrim(dataTemp,2)
+      dataTemp = strtrim(dataTemp,2)
       
       ; Check the specified data format matches the line
       lparts = strsplit(dataTemp, ' ', /extract, count=nparts)
@@ -144,20 +144,19 @@ PRO Ascii2LAS_TLS, infile
         psid += 1US
         continue
       endif
-      if (nparts le 4) then continue
       
       ; Write first return
-      las_data.x = ulong(lparts[0] / 0.01D)
-      las_data.y = ulong(lparts[1] / 0.01D)
-      las_data.z = uint(lparts[2] / 0.01D)
-      las_data.inten = uint(abs(lparts[3]))
+      las_data.(0) = ulong(lparts[0] / 0.01D)
+      las_data.(1) = ulong(lparts[1] / 0.01D)
+      las_data.(2) = uint(lparts[2] / 0.01D)
+      las_data.(3) = uint(abs(lparts[3]))
       outputHeader.xMin <= double(lparts[0])
       outputHeader.xMax >= double(lparts[0])
       outputHeader.yMin <= double(lparts[1])
       outputHeader.yMax >= double(lparts[1])
       outputHeader.zMin <= double(lparts[2])
       outputHeader.zMax >= double(lparts[2])
-      las_data.nreturn = swap_endian(9B, /swap_if_big_endian) ; reads, '00001001', value, format='(B)'
+      las_data.(4) = swap_endian(9B, /swap_if_big_endian) ; reads, '00001001', value, format='(B)'
       las_data.source = uint(psid)
       las_data.red = uint(lparts[4])
       las_data.green = uint(lparts[5])

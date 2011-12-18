@@ -79,130 +79,46 @@ PRO LASmerge, inFiles, outFile, new_psid=new_psid, buffer=buffer
   if theError ne 0 then begin
     catch, /cancel
     help, /last_message, output=errText
-    errMsg = dialog_message(errText, /error, title='Error merging points.')
+    errMsg = dialog_message(errText, /error, title='Error filtering points.')
     return
   endif
   
-  ; Start progress bar
-  bcount = 0L
-  progressBar=Obj_New('progressbar', Color='Forest Green', Text=strtrim(inFiles[0],2), title='Merging LAS files...', /fast_loop)
-  progressBar->Start
+  ; Process each LAS file
+  for i = 0L, n_elements(inFiles)-1L do begin
   
-  ; Initialise the output file
-  ReadHeaderLAS, inFiles[0], outputHeader
-  outputHeader.systemID = byte('Merged LAS')
+    ; Read in the LAS files (WARNING: memory may be an issue)
+    readLAS, inFiles[i], header, data, /check
+    
+    ; Remove buffer returns if necessary
+    if keyword_set(buffer) then begin
+      index = where(data.(7) eq 0, count)
+      if (count gt 0) then data = data[index]
+    endif
+    
+    ; Merge the data data
+    if keyword_set(new_psid) then data.(8) = i+1L
+    all_data = (i eq 0) ? temporary(data) : [temporary(all_data), temporary(data)]
+    
+  endfor
+  
+  ; Create the header for the new file (the data has been subsetted so will have different attributes)
+  outputHeader = header
   outputHeader.softwareID = byte('IDL ' + !version.release)
   date = bin_date(systime(/utc))
   day = julday(date[1],date[2],date[0]) - julday(1,1,date[0]) + 1
   outputHeader.day  = uint(day)
   outputHeader.year = uint(date[0])
-  outputHeader.nPoints = 0
-  WriteLAS, outFile, outputHeader, /nodata
-  openw, outputLun, outFile, /get_lun, /swap_if_big_endian, /append
-  outputHeader.xMin = 10e6
-  outputHeader.yMin = 10e6
-  outputHeader.zMin = 10e6
-  outputHeader.xMax = -10e6
-  outputHeader.yMax = -10e6
-  outputHeader.zMax = -10e6
-  outputHeader.nRecords = 0
-  outputHeader.nReturns = ulonarr(5)
-  case outputHeader.versionMinor of
-    0: begin
-      outputHeader.globalEncoding = 0US
-      outputHeader.headerSize = 227US
-      outputHeader.dataOffset = 227UL
-    end
-    1: begin
-      outputHeader.globalEncoding = 0US
-      outputHeader.headerSize = 227US
-      outputHeader.dataOffset = 227UL
-    end
-    2: begin
-      outputHeader.globalEncoding = 1US
-      outputHeader.headerSize = 227US
-      outputHeader.dataOffset = 227UL
-    end
-    3: begin
-      outputHeader.globalEncoding = 128US
-      outputHeader.headerSize = 235US
-      outputHeader.dataOffset = 235UL
-      outputHeader.wdp = 0LL
-    end
-  endcase
-  case outputHeader.pointFormat of
-    0: outputHeader.pointLength = 20US
-    1: outputHeader.pointLength = 28US
-    2: outputHeader.pointLength = 26US
-    3: outputHeader.pointLength = 34US
-    4: outputHeader.pointLength = 57US
-    5: outputHeader.pointLength = 63US
-  endcase
+  outputHeader.nPoints = n_elements(all_data.Time)
+  outputHeader.nReturns = histogram(ishft(ishft(all_data.nreturn,5),-5), min=1, max=5)
+  outputHeader.xMin = min(all_data.(0)) * header.xScale + header.xOffset
+  outputHeader.xMax = max(all_data.(0)) * header.xScale + header.xOffset
+  outputHeader.yMin = min(all_data.(1)) * header.yScale + header.yOffset
+  outputHeader.yMax = max(all_data.(1)) * header.yScale + header.yOffset
+  outputHeader.zMin = min(all_data.(2)) * header.zScale + header.zOffset
+  outputHeader.zMax = max(all_data.(2)) * header.zScale + header.zOffset
   
-  ; Process each LAS file
-  nFiles = n_elements(inFiles)
-  for i = 0L, nFiles-1L, 1L do begin
-  
-    ; Read in the LAS files (WARNING: memory may be an issue)
-    progressBar -> SetProperty, Text=strtrim(inFiles[i],2)
-    readLAS, inFiles[i], header, data
-    
-    ; Remove buffer returns if necessary
-    if keyword_set(buffer) then begin
-      index = where(data.user eq 0, count)
-      if (count gt 0) then data = data[index] else continue
-    endif else begin
-      count = header.nPoints
-    endelse
-    
-    ; Add a new PSID if necessary
-    if keyword_set(new_psid) then data.source = i+1L
-    
-    ; Check data scaling is the same
-    if logical_or(outputHeader.xScale ne header.xScale, outputHeader.xOffset ne header.xOffset) then begin
-      data.x = ((data.x * header.xScale + header.xOffset) - outputHeader.xOffset) / outputHeader.xScale
-    endif
-    if logical_or(outputHeader.yScale ne header.yScale, outputHeader.yOffset ne header.yOffset) then begin
-      data.y = ((data.y * header.yScale + header.yOffset) - outputHeader.yOffset) / outputHeader.yScale
-    endif    
-    if logical_or(outputHeader.zScale ne header.zScale, outputHeader.zOffset ne header.zOffset) then begin
-      data.z = ((data.z * header.zScale + header.zOffset) - outputHeader.zOffset) / outputHeader.zScale
-    endif  
-    
-    ; Write the data
-    writeu, outputLun, data
-    
-    ; Update header
-    nReturns = outputHeader.nReturns
-    outputHeader.nReturns = histogram([ishft(ishft(data.nreturn,5),-5)], min=1, max=5, input=nReturns)
-    outputHeader.nPoints += count
-    outputHeader.xMin <= header.xMin
-    outputHeader.xMax >= header.xMax
-    outputHeader.yMin <= header.yMin
-    outputHeader.yMax >= header.yMax
-    outputHeader.zMin <= header.zMin
-    outputHeader.zMax >= header.zMax
-    
-    ; Update progress bar
-    bcount += 1
-    if progressBar->CheckCancel() then begin
-      ok=Dialog_Message('LAS merge cancelled')
-      progressBar->Destroy
-      return
-    endif
-    progressbar->Update, (float(bcount) / nFiles) * 100.0
-    
-  endfor
-  
-  ; Write output header
-  if (total(outputHeader.nReturns) NE outputHeader.nPoints) then begin
-    outputHeader.nReturns[0] += (outputHeader.nPoints - total(outputHeader.nReturns))
-  endif
-  point_lun, outputLun, 0
-  writeu, outputLun, outputHeader
-  free_lun, outputLun
-  
-  ; End progress bar
-  progressbar->Destroy
+  ; Write the data subset (sorted by time) to the new LAS file
+  writeLAS, outFile, outputHeader, all_data[bsort(all_data.Time)]
+  ok = dialog_message('LAS files merged.', /information)
   
 END

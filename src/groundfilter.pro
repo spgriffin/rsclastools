@@ -76,7 +76,7 @@
 FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=dh0,slope=slope,cell_size=cell_size,height_threshold=height_threshold
 
   ; Set defaults if parameters not provided
-  forward_function hist_nd;, hist2d_rilidar
+  forward_function hist2d_rilidar
   if not keyword_set(b_start) then b_start=1.0
   if not keyword_set(bmax) then bmax=7.0
   if not keyword_set(dh0) then dh0=0.5
@@ -85,11 +85,8 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
   if not keyword_set(height_threshold) then height_threshold=0.15
   
   ; Regularise the grid
-  v = transpose([[easting], [northing]])
-  cell_size_temp = cell_size
-  counts = hist_nd(v, cell_size_temp, reverse_indices=ri, $
-      min=[min(easting),min(northing)], max=[max(easting)+1e-6,max(northing)+1e-6])
-  
+  counts = hist2d_rilidar(easting,northing,ri,n_cols,n_rows,BIN1=cell_size,BIN2=cell_size, $
+    MIN1=min(easting),MIN2=min(northing),MAX1=max(easting),MAX2=max(northing))
   elevation_grid = float(temporary(counts))
   for i=0L,n_elements(elevation_grid)-1L,1L do begin
     elevation_grid[i] = (ri[i] NE ri[i+1L]) ? min(elevation[ri[ri[i]:ri[i+1L]-1L]]) : -1.0
@@ -97,7 +94,7 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
   null_flag = elevation_grid EQ -1.0
   null_index = where(null_flag EQ 1,null_index_count,complement=real_index)
   wflag = elevation_grid*0.0
-  if (null_index_count GT 0) then elevation_grid[null_index] = 0.0
+  elevation_grid[null_index] = 0.0
   
   ; Determine the maximum elevation difference threshold
   dhmax = max(elevation_grid[real_index])-min(elevation_grid[real_index])
@@ -115,7 +112,7 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
   for q = 1L,n_elements(w)-1L,1L do begin
   
     ; Create kernel
-    if (w[q] ge b_start) then begin
+    if (w[q] lt b_start) then begin
     
       kernel_base = float(shift(dist(2.0 * w[q] + 1.0), w[q], w[q]) LE w[q])
       kernel_size = 2.0 * w[q] + 1.0
@@ -134,7 +131,7 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
             temp_grid = convol(elevation_grid,kernel,/center,/edge_truncate)
           endelse
           Zf = (temp_grid < Zf) + (temp_grid EQ 0.0) * Zf
-          if (null_index_count GT 0) then Zf[null_index] = 0.0
+          Zf[null_index] = 0.0
         endif
       endfor
       
@@ -152,7 +149,7 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
             temp_grid = convol(Zf,kernel,/center,/edge_truncate)
           endelse
           Z = temp_grid > Z
-          if (null_index_count GT 0) then Z[null_index] = 0.0
+          Z[null_index] = 0.0
         endif
       endfor
       
@@ -190,7 +187,7 @@ FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=d
   ; Detect ground data points omitted in the grid regularisation
   idx1 = where(class EQ 0, cnt1)
   idx2 = where(class EQ 2, cnt2)
-  if ((cnt1 GT 0) and (cnt2 ge 3)) then begin
+  if (cnt1 GT 0) then begin
     triangulate, easting[idx2], northing[idx2], triangles
     elev_temp = griddata(easting[idx2], northing[idx2], elevation[idx2], method='NaturalNeighbor', $
       triangles=triangles, xout=easting[idx1], yout=northing[idx1])

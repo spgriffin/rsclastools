@@ -74,7 +74,8 @@
 ;###########################################################################
 
 PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone=zone, tilesize=tilesize, null=null, hemisphere=hemisphere, $
-    min_points=min_points, sectors=sectors, smoothing=smoothing, proj=proj, productType=productType, separate=separate, tmp=tmp
+    min_points=min_points, sectors=sectors, smoothing=smoothing, proj=proj, productType=productType, separate=separate, $
+    outFormat=outFormat
     
   ; Error handling
   catch, theError
@@ -88,6 +89,7 @@ PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone
   
   ; Keywords and system stuff
   forward_function SurfaceTile, SurfaceInterpolate
+  if not keyword_set(outFormat) then outFormat = 'ENVI'
   if not keyword_set(method) then method = 'NaturalNeighbor'
   if not keyword_set(resolution) then resolution = 0.5
   if not keyword_set(zone) then zone = 55
@@ -97,7 +99,7 @@ PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone
   if not keyword_set(sectors) then sectors=6
   if not keyword_set(smoothing) then smoothing=0
   if not keyword_set(hemisphere) then hemisphere='South'
-  if not keyword_set(proj) then proj=''
+  if not keyword_set(proj) then proj=0
   if not keyword_set(productType) then productType='Elevation'
   RSC_LAS_Tools_SysVar
   
@@ -114,10 +116,9 @@ PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone
   endif
   
   ; Start progress bar
-  progressBar=Obj_New('progressbar', Color='Forest Green', Text='Initialising...', title='Surface Product', /fast_loop)
+  progressBar=Obj_New('progressbar', Color='Forest Green', Text='Creating surface...', title='Surface Product', /fast_loop)
   progressBar->Start
   bcount = 0.0
-  progressbar->Update, bcount
   
   ; Process all files separately or all at once
   opath = file_dirname(lasfiles[0])
@@ -134,18 +135,17 @@ PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone
       outfile = filepath(strjoin([fparts[0],'RSCLASTools_TiledSurface',method,productType,resolution_str], '_'), root_dir=opath)
       las_input = lasfiles[j]
       progressBar -> SetProperty, Text=strtrim(las_input,2)
+      progressbar->Update, 0D
     endelse
     openw, lun, outfile, /get_lun
     
     ; Tile
-    progressBar -> SetProperty, Text="Tiling LAS data"
-    tileStruct = SurfaceTile(las_input, tileXsize=tilesize[0],tileYsize=tilesize[1],tmp=tmp,resolution=resolution)
+    tileStruct = SurfaceTile(las_input, tileXsize=tilesize[0],tileYsize=tilesize[1],/tmp,resolution=resolution)
     ncols = (tileStruct.lrx - tileStruct.ulx) / resolution
     nrows = (tileStruct.uly - tileStruct.lry) / resolution
     btotal = float(tileStruct.nrows)
     
     ; Interpolate, stitch
-    progressBar -> SetProperty, Text="Interpolating LAS data"
     for row = 1L, tileStruct.nrows, 1L do begin
       index = where(tileStruct.row EQ (tileStruct.nrows-row+1L))
       nlines = (tileStruct.yMax[index[0]] - tileStruct.yMin[index[0]]) / resolution
@@ -162,7 +162,7 @@ PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone
       ; Update progress bar
       bcount += 1.0
       if progressBar->CheckCancel() then begin
-        ok=Dialog_Message('LAS interpolation cancelled')
+        ok=Dialog_Message('Surface creation cancelled')
         progressBar->Destroy
         return
       endif
@@ -176,7 +176,12 @@ PRO TileInterpolateSurface, lasfiles, method=method, resolution=resolution, zone
     if (count gt 0) then file_delete, tileStruct.name[index], /quiet
     
     ; Write the ENVI header file
-    writeENVIhdr, outfile, zone, resolution, tileStruct.ulx, tileStruct.uly, ncols, nrows, 1, proj, hemisphere, productType
+    if (outFormat eq 'ENVI') then begin
+      writeENVIhdr, outfile, zone, resolution, tileStruct.ulx, tileStruct.uly, ncols, nrows, proj, hemisphere, productType
+    endif else begin
+      writegeotiff, outfile, tileStruct.ulx, tileStruct.uly, proj, outfile+'.tif', cell_size=resolution, /assocInput, ncols=ncols, nrows=nrows
+      file_delete, outfile, /quiet
+    endelse
     
   endfor
   

@@ -109,14 +109,6 @@ PRO ExtractSite_GUI
   text = WIDGET_LABEL(Base2, value='Minor Axis = Major Axis * sqrt(1 - Eccentricity^2)', frame=0, /align_left)
   text = WIDGET_LABEL(Base2, value='Azimuth is orientation of the major axis from north (degrees).', frame=0, /align_left)
   
-  tlb3 = widget_base(tlb, column=1, xsize=!QRSC_LIDAR_XSIZE)
-  text3 = WIDGET_LABEL(tlb3, value='Output File Information', frame=0, /align_center)
-  Base3 = widget_base(tlb3, column=1, frame=1)
-  text3 = WIDGET_LABEL(Base3, value='Output filename is the input LAS filename with "_<name>" appended.', frame=0, /align_left)
-  text3 = WIDGET_LABEL(Base3, value='For example, Input : t1.las', frame=0, /align_left)
-  text3 = WIDGET_LABEL(Base3, value='Output : t1_site1.las', frame=0, /align_left)
-  text3 = WIDGET_LABEL(Base3, value='Note that all VLR and WDP are not copied to the output files.', frame=0, /align_left)
-  
   ; Do the rest
   button = Widget_Button(tlb, Value='Extract Subsets', UValue='StartExtractSite')
   button = Widget_Button(tlb, Value='Cancel', UValue='Quit')

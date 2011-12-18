@@ -148,10 +148,10 @@ PRO LAS2Shapefile, infile, columns, null, splitsize=splitsize
       if (columns[3] EQ 1) then begin
         case string(header.systemID) of
           'Height: Source': begin
-            height = data.source * 0.01
+            height = data.(8) * 0.01
           end
           'Height: Elev': begin
-            height = data.z * header.zScale + header.zOffset
+            height = data.(2) * header.zScale + header.zOffset
           end
           else: begin
             progressBar->Destroy
@@ -196,10 +196,10 @@ PRO LAS2Shapefile, infile, columns, null, splitsize=splitsize
         dims = size(vertices, /dimensions)
         entNew.SHAPE_TYPE = 11
         entNew.ISHAPE = bcount
-        entNew.BOUNDS = [data[k].x * header.xScale + header.xOffset, data[k].y * header.yScale + header.yOffset, $
-          data[k].z * header.zScale + header.zOffset, 0.0, $
-          data[k].x * header.xScale + header.xOffset, data[k].y * header.yScale + header.yOffset, $
-          data[k].z * header.zScale + header.zOffset, 0.0]
+        entNew.BOUNDS = [data[k].East * header.xScale + header.xOffset, data[k].North * header.yScale + header.yOffset, $
+          data[k].Elev * header.zScale + header.zOffset, 0.0, $
+          data[k].East * header.xScale + header.xOffset, data[k].North * header.yScale + header.yOffset, $
+          data[k].Elev * header.zScale + header.zOffset, 0.0]
         entNew.N_VERTICES = 1
         
         ;Create structure for the attributes
@@ -208,7 +208,7 @@ PRO LAS2Shapefile, infile, columns, null, splitsize=splitsize
         ;Define the values for the attributes
         columns_index = total(columns, /cumulative) - 1L
         if (columns[0] EQ 1) then attrNew.(columns_index[0]) = data[k].Time
-        if (columns[1] EQ 1) then attrNew.(columns_index[1]) = data[k].z * header.zScale + header.zOffset
+        if (columns[1] EQ 1) then attrNew.(columns_index[1]) = data[k].Elev * header.zScale + header.zOffset
         if (columns[2] EQ 1) then attrNew.(columns_index[2]) = data[k].Inten
         if (columns[3] EQ 1) then attrNew.(columns_index[3]) = height[k]
         if (columns[4] EQ 1) then attrNew.(columns_index[4]) = return_n[k]

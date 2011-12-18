@@ -147,16 +147,11 @@ function hist_nd,V,bs,MIN=mn,MAX=mx,NBINS=nbins,REVERSE_INDICES=ri,OMIT_UPPER=om
   if n_elements(bs) gt 0 then bso=bs
   if n_elements(nbins) gt 0 then nbinso=nbins
   
-  if n_elements(mn) eq 1 then mn=replicate(mn,s[0])
-  if n_elements(mx) eq 1 then mx=replicate(mx,s[0])
-  if n_elements(bs) eq 1 then begin
-    bso = bs
-    bs=replicate(bs,s[0])
-  endif
-  if n_elements(nbins) eq 1 then begin
-    nbinso=nbins
-    nbins=replicate(nbins,s[0])
-  endif
+  if n_elements(mn)    eq 1 then mn=replicate(mn,s[0])
+  if n_elements(mx)    eq 1 then mx=replicate(mx,s[0])
+  if n_elements(bs)    eq 1 then bs=replicate(bs,s[0])
+  if n_elements(nbins) eq 1 then nbins=replicate(nbins,s[0])
+  
   if ~array_equal(mn le mx,1b) then $
     message,'Min must be less than or equal to max.'
     
