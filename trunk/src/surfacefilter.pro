@@ -104,9 +104,9 @@ FUNCTION SurfaceFilter, tileStruct, col_n, row_n, resolution=resolution, b_start
   endfor
   
   ; Do filter
-  easting = all_data.x * header.xScale + header.xOffset
-  northing = all_data.y * header.yScale + header.yOffset
-  elevation = all_data.z * header.zScale + header.zOffset
+  easting = all_data.east * header.xScale + header.xOffset
+  northing = all_data.north * header.yScale + header.yOffset
+  elevation = all_data.elev * header.zScale + header.zOffset
   class = GroundFilter(easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=dh0, $
     slope=slope,cell_size=resolution,height_threshold=height_threshold)
   all_data.Class = temporary(class)

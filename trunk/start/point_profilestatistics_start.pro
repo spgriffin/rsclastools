@@ -78,8 +78,8 @@ PRO Point_ProfileStatistics_start, event
   Widget_Control, event.top, Get_UValue=info
   
   null = info.null->Get_Value()
-  maxVal = info.maxVal->Get_Value()
-  minVal = info.minVal->Get_Value()
+  height_threshold = info.height_threshold->Get_Value()
+  max_height = info.max_height->Get_Value()
   ReturnType = info.return_droplist->GetSelection()
   StatsType = info.stats_droplist->GetSelection()
   unit = info.unit_droplist->GetSelection()
@@ -91,7 +91,7 @@ PRO Point_ProfileStatistics_start, event
   Widget_Control, event.top, /Destroy
   LidarPoint, info.infile, 'Statistics', StatsType, $
     ReturnType, unit, height_threshold, weights, null, no_obs, height_percentile, rhovg_method, $
-    rhovg_percentile, constant, interval, max_height, 0, limits=[minVal,maxVal]
+    rhovg_percentile, constant, interval, max_height, 0
     
   ; Make file directory cwd
   cd, file_dirname(info.infile[0])

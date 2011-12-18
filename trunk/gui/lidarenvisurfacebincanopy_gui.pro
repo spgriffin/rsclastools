@@ -90,10 +90,7 @@ PRO LidarENVISurfaceBinCanopy_GUI
     'Height Percentile', $
     'Canopy Openness Index', $
     'Canopy Relief Ratio', $
-    'Plant Area Index Proxy', $
-    'Density Deciles', $
-    'Fractional Cover Profile', $
-    'Apparent Foliage Profile']
+    'Plant Area Index Proxy']
     
   coverList = ['Count Ratio', $
     'Weighted Sum', $
@@ -141,7 +138,7 @@ PRO LidarENVISurfaceBinCanopy_GUI
   ; Create the widget that will record the user parameters
   infile_bn = FILE_BASENAME(inFile)
   infile_dn = FILE_DIRNAME(inFile)
-  text = WIDGET_LABEL(tlb, value='Selected LAS Files. Check the bounds for errors.', frame=0, /align_center)
+  text = WIDGET_LABEL(tlb, value='Selected LAS Files (double-click to edit bounds)', frame=0, /align_center)
   wTree = WIDGET_TREE(tlb)
   wtRoot = WIDGET_TREE(wTree, VALUE=infile_dn[0], /FOLDER, /EXPANDED)
   file_bm = replicate(0B,16,16,3)
@@ -159,7 +156,6 @@ PRO LidarENVISurfaceBinCanopy_GUI
   prod_droplist = FSC_Droplist(Base1, Value=productList, Index=0, title='Product Type : ')
   return_droplist = FSC_Droplist(Base1, Value=returnList, Index=0, title='Return Type : ')
   max_height = FSC_INPUTFIELD(Base1, Title='Maximum Height Used (m) : ', Value=100.0, /FloatValue, LabelAlign=1, decimal=2, /positive)
-  text = WIDGET_LABEL(Base1, value='Maximum Height Used also defines the maximum height of vertical profile products', frame=0, /align_left)
   resolution = FSC_INPUTFIELD(Base1, Title='Spatial resolution (m) : ', Value=5.0, /FloatValue, /Positive, LabelAlign=1, decimal=2)
   null = FSC_INPUTFIELD(Base1, Title='"No Data" Value * : ', Value=-1.0, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base1, value='* Must be < elevation minimum.', frame=0, /align_left)
@@ -171,19 +167,19 @@ PRO LidarENVISurfaceBinCanopy_GUI
   text = WIDGET_LABEL(Base1, value='For selected LAS files : ', frame=0, /align_left)
   fields = ['Create a single surface from all LAS files', 'Create a separate surface for each LAS file']
   surfacetype = cw_bgroup(Base1, fields, column=1, /exclusive, set_value=0)
-  fields = ['Use system directory for temporary files']
-  tmpflag = cw_bgroup(Base1, fields, /nonexclusive, SET_VALUE=[1])
+  text = WIDGET_LABEL(Base1, value='Output file format : ', frame=0, /align_left)
+  format_fields = ['ENVI', 'GeoTIFF']
+  formats = cw_bgroup(Base1, format_fields, column=2, /exclusive, set_value=0)
   
   tlb3 = widget_base(tlb, column=1, xsize=!QRSC_LIDAR_XSIZE)
   text3 = WIDGET_LABEL(tlb3, value='Lidar Index and Fractional Cover Product Settings', frame=0, /align_center)
   Base3 = widget_base(tlb3, column=1, frame=1)
   cover_droplist = FSC_Droplist(Base3, Value=coverList, Index=0, title='Method : ')
   height_threshold = FSC_INPUTFIELD(Base3, Title='Fractional Cover > Height Threshold (m) : ', Value=0.5, /FloatValue, LabelAlign=1, decimal=2)
-  text = WIDGET_LABEL(Base3, value='Height thresold is also used as lower bound of Density Deciles', frame=0, /align_left)
-  height_threshold_top = FSC_INPUTFIELD(Base3, Title='Fractional Cover <= Top Height Threshold (m) : ', Value=50.0, /FloatValue, LabelAlign=1, decimal=2)
+  height_threshold_top = FSC_INPUTFIELD(Base3, Title='Fractional Cover <= Top Height Threshold (m) : ', Value=0.0, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base3, value=' Weights for "Weighted Sum" : ', frame=0, /align_left)
   weight_VegGnd = FSC_INPUTFIELD(Base3, Title=' First Returns Only : ', Value=0.50, /FloatValue, LabelAlign=1, decimal=2)
-  weight_Double = FSC_INPUTFIELD(Base3, Title=' First & Last Returns : ', Value=1.00, /FloatValue, LabelAlign=1, decimal=2)
+  weight_Double = FSC_INPUTFIELD(Base3, Title=' First & Last Returns : ', Value=0.75, /FloatValue, LabelAlign=1, decimal=2)
   weight_Single = FSC_INPUTFIELD(Base3, Title=' Singular Returns : ', Value=1.00, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base3, value='Calibration of "Count Ratio" to cover metrics:', frame=0, /align_left)
   text = WIDGET_LABEL(Base3, value='Note: This has only been tested for a range of sites within Queensland', frame=0, /align_left)
@@ -194,12 +190,10 @@ PRO LidarENVISurfaceBinCanopy_GUI
   tlb4 = widget_base(tlb, column=1, xsize=!QRSC_LIDAR_XSIZE)
   text4 = WIDGET_LABEL(tlb4, value='Height Percentile Product Settings', frame=0, /align_center)
   Base4 = widget_base(tlb4, column=1, frame=1)
-  height_percentile = FSC_INPUTFIELD(Base4, Title='Height Percentile (0-1) : ', Value=0.95, /FloatValue, LabelAlign=1, decimal=2)
-  text = WIDGET_LABEL(Base4, value='Height percentile is also used as upper bound of Density Deciles', frame=0, /align_left)
+  height_percentile = FSC_INPUTFIELD(Base4, Title='Height Percentile (0-1) : ', Value=0.99, /FloatValue, LabelAlign=1, decimal=2)
   percentile_droplist = FSC_Droplist(Base4, Value=percentileList, Index=0, title='Method : ')
   text = WIDGET_LABEL(Base4, value='Settings for the Cover (Counts) method : ', frame=0, /align_left)
-  vertical_binsize = FSC_INPUTFIELD(Base4, Title='Vertical Bin Size (m) : ', Value=0.5, /FloatValue, LabelAlign=1, decimal=2)
-  text = WIDGET_LABEL(Base4, value='Vertical Bin Size is also used for fractional cover and apparent foliage profiles', frame=0, /align_left)
+  vertical_binsize = FSC_INPUTFIELD(Base4, Title='Vertical Bin Size (m) : ', Value=0.15, /FloatValue, LabelAlign=1, decimal=2)
   
   tlb5 = widget_base(tlb, column=1, xsize=!QRSC_LIDAR_XSIZE)
   text5 = WIDGET_LABEL(tlb5, value='Settings Unique to Intensity Derived Products', frame=0, /align_center, XOFFSET=5)
@@ -263,7 +257,7 @@ PRO LidarENVISurfaceBinCanopy_GUI
     weight_Double:weight_Double, $ ; weight Double
     weight_Single:weight_Single, $ ; weight Single
     metrictype:metrictype, $ ; cover metric
-    tmpflag:tmpflag, $ ; Temporary file flag
+    formats:formats, $ ; File format
     surfacetype:surfacetype} ; Single or separate surfaces
   XManager, 'RSC_LAS_Tools', tlb, /No_Block
   

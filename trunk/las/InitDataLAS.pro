@@ -21,7 +21,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;       data = InitDataLAS(PointFormat)
+;       data = InitDataLAS(PointFormat=PointFormat)
 ;
 ;       The PointFormat specifies the requested format of the data record.
 ;
@@ -39,7 +39,6 @@
 ;       Written by David Streutker, March 2006.
 ;       Change from a procedure to a function, July 2007
 ;       Updated for LAS 1.2 format. 2010. John Armston.
-;       Update for LAS 1.3 format. Nov 2010. John Armston.
 ;
 ;###########################################################################
 ;
@@ -51,7 +50,7 @@
 ; Copyright � 2006 David Streutker, Idaho State University.
 ;
 ; This software is provided "as-is", without any express or
-; implied warranty. In no event will th4e authors be held liable
+; implied warranty. In no event will the authors be held liable
 ; for any damages arising from the use of this software.
 ;
 ; Permission is granted to anyone to use this software for any
@@ -75,16 +74,16 @@
 
 function InitDataLAS, pointFormat=pointFormat
 
-  compile_opt idl2
+  compile_opt idl2;, logical_predicate
   
   ; Define the data structure
-  if (n_elements(pointFormat) eq 0) then pointFormat = 3
+  if not keyword_set(pointFormat) then pointFormat = 1
   case pointFormat of
     0: begin
       data = {formatD0,  $
-        x       : 0L,  $     ; X data
-        y       : 0L,  $     ; Y data
-        z       : 0L,  $     ; Z data
+        east    : 0L,  $     ; X data
+        north   : 0L,  $     ; Y data
+        elev    : 0L,  $     ; Z data
         inten   : 0US, $     ; Intensity
         nReturn : 0B,  $     ; Return number, number of returns, scan direction, edge
         class   : 0B,  $     ; Classification
@@ -95,9 +94,9 @@ function InitDataLAS, pointFormat=pointFormat
     end
     1: begin
       data = {formatD1,  $
-        x       : 0L,  $     ; X data
-        y       : 0L,  $     ; Y data
-        z       : 0L,  $     ; Z data
+        east    : 0L,  $     ; X data
+        north   : 0L,  $     ; Y data
+        elev    : 0L,  $     ; Z data
         inten   : 0US, $     ; Intensity
         nReturn : 0B,  $     ; Return number, number of returns, scan direction, edge
         class   : 0B,  $     ; Classification
@@ -109,9 +108,9 @@ function InitDataLAS, pointFormat=pointFormat
     end
     2: begin
       data = {formatD2,  $
-        x       : 0L,  $     ; X data
-        y       : 0L,  $     ; Y data
-        z       : 0L,  $     ; Z data
+        east    : 0L,  $     ; X data
+        north   : 0L,  $     ; Y data
+        elev    : 0L,  $     ; Z data
         inten   : 0US, $     ; Intensity
         nReturn : 0B,  $     ; Return number, number of returns, scan direction, edge
         class   : 0B,  $     ; Classification
@@ -125,11 +124,12 @@ function InitDataLAS, pointFormat=pointFormat
     end
     3: begin
       data = {formatD3,  $
-        x       : 0L,  $     ; X data
-        y       : 0L,  $     ; Y data
-        z       : 0L,  $     ; Z data
+        east    : 0L,  $     ; X data
+        north   : 0L,  $     ; Y data
+        elev    : 0L,  $     ; Z data
         inten   : 0US, $     ; Intensity (return amplitude)
-        nReturn : 0B, $     ; Return number, number of returns, scan direction, edge
+        width   : 0US, $     ; Return width
+        nReturn : 0US, $     ; Return number, number of returns, scan direction, edge
         class   : 0B,  $     ; Classification
         angle   : 0B,  $     ; Scan angle
         user    : 0B,  $     ; User data
@@ -138,51 +138,6 @@ function InitDataLAS, pointFormat=pointFormat
         red     : 0US, $     ; Red image channel
         green   : 0US, $     ; Green image channel
         blue    : 0US  $     ; Blue image channel
-        }
-    end
-    4: begin
-      data = {formatD4,  $
-        x       : 0L,  $     ; X data
-        y       : 0L,  $     ; Y data
-        z       : 0L,  $     ; Z data
-        inten   : 0US, $     ; Intensity (return amplitude)
-        nReturn : 0B, $     ; Return number, number of returns, scan direction, edge
-        class   : 0B,  $     ; Classification
-        angle   : 0B,  $     ; Scan angle
-        user    : 0B,  $     ; User data
-        source  : 0US, $     ; Point source ID
-        time    : 0D,  $     ; GPS time field     
-        wpack   : 0B,  $     ; Wave packet descriptor index
-        woffs   : 0ULL,$     ; Byte offset to waveform data
-        wsize   : 0UL, $     ; Waveform packet size
-        wloc    : 0.0, $     ; Return point waveform location
-        xt      : 0.0, $     ; X(t)
-        yt      : 0.0, $     ; Y(t)
-        zt      : 0.0  $     ; Z(t)
-        }
-    end
-    5: begin
-      data = {formatD5,  $
-        x       : 0L,  $     ; X data
-        y       : 0L,  $     ; Y data
-        z       : 0L,  $     ; Z data
-        inten   : 0US, $     ; Intensity (return amplitude)
-        nReturn : 0B, $     ; Return number, number of returns, scan direction, edge
-        class   : 0B,  $     ; Classification
-        angle   : 0B,  $     ; Scan angle
-        user    : 0B,  $     ; User data
-        source  : 0US, $     ; Point source ID
-        time    : 0D,  $     ; GPS time field
-        red     : 0US, $     ; Red image channel
-        green   : 0US, $     ; Green image channel
-        blue    : 0US, $     ; Blue image channel       
-        wpack   : 0B,  $     ; Wave packet descriptor index
-        woffs   : 0ULL,$     ; Byte offset to waveform data
-        wsize   : 0UL, $     ; Waveform packet size
-        wloc    : 0.0, $     ; Return point waveform location
-        xt      : 0.0, $     ; X(t)
-        yt      : 0.0, $     ; Y(t)
-        zt      : 0.0  $     ; Z(t)
         }
     end
   endcase

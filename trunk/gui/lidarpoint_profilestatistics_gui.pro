@@ -129,10 +129,9 @@ PRO LidarPoint_ProfileStatistics_GUI
   Base1 = widget_base(tlb1, column=1, frame=1)
   stats_droplist = FSC_Droplist(Base1, Value=statsList, Index=0, title='Product Type : ')
   null = FSC_INPUTFIELD(Base1, Title='"No Data" Value : ', Value=-1.0, /FloatValue, LabelAlign=1, decimal=2)
-  
   return_droplist = FSC_Droplist(Base1, Value=returnList, Index=3, title='Return Type : ')
-  minVal = FSC_INPUTFIELD(Base1, Title='Maximum value to consider : ', Value=9999.0, /FloatValue, LabelAlign=1, decimal=2)
-  maxVal = FSC_INPUTFIELD(Base1, Title='Minimum value to consider : ', Value=-9999.0, /FloatValue, LabelAlign=1, decimal=2)
+  max_height = FSC_INPUTFIELD(Base1, Title='Maximum value to use : ', Value=1000.0, /FloatValue, LabelAlign=1, decimal=2, /positive)
+  height_threshold = FSC_INPUTFIELD(Base1, Title='Minimum value to use : ', Value=0.0, /FloatValue, LabelAlign=1, decimal=2)
   unit_droplist = FSC_Droplist(Base1, Value=unitList, Index=2, title='Variable : ')
   
   tlb6 = widget_base(tlb, column=1,xsize=!QRSC_LIDAR_XSIZE)
@@ -156,13 +155,13 @@ PRO LidarPoint_ProfileStatistics_GUI
     stats_droplist:stats_droplist, $ ; statistic method
     return_droplist:return_droplist, $ ; return type
     null:null, $ ; null value
-    minVal:minVal, $ ; minimum value to consider
-    maxVal:maxVal, $ ; maximum value to consider
     unitList:unitList, $ ; unit
     unit_droplist:unit_droplist, $ ; unit
+    height_threshold:height_threshold, $ ; height threshold
     infile:infile, $ ; filename/s
     statsList:statsList, $ ; Products
-    returnList:returnList} ; Return type
+    returnList:returnList, $ ; Return type
+    max_height:max_height} ; maximum height to consider
     
   XManager, 'RSC_LAS_Tools', tlb, /No_Block
   

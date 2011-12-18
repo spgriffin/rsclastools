@@ -73,15 +73,14 @@
 ;
 ;###########################################################################
 
-FUNCTION ReprojectCoords, x_coords, y_coords, in_proj, out_proj, zone=zone, hemisphere=hemisphere
+FUNCTION ReprojectCoords, x_in, y_in, in_proj, out_proj, zone=zone, hemisphere=hemisphere
 
   ; Keywords
-  compile_opt idl2
   if not keyword_set(zone) then zone = 55
   if not keyword_set(hemisphere) then hemisphere = 'South'
   
   ; Check if anything needs to be done
-  if (in_proj eq out_proj) then return, transpose([[x_coords],[y_coords]])
+  if (in_proj eq out_proj) then return, transpose([[x_in],[y_in]])
   
   ; Set input projection
   case in_proj of
@@ -106,7 +105,7 @@ FUNCTION ReprojectCoords, x_coords, y_coords, in_proj, out_proj, zone=zone, hemi
   ; Convert input coordinates to lat/long
   if (n_elements(inProjMap) gt 0 or in_proj eq 'Geographic') then begin
     if (in_proj ne 'Geographic') then begin
-      lnglat = map_proj_inverse(x_coords, y_coords, map_structure=inProjMap)
+      lnglat = map_proj_inverse(x_in, y_in, map_structure=inProjMap)
       lng = reform(lnglat[0,*])
       lat = reform(lnglat[1,*])
     endif else begin

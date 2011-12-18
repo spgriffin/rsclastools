@@ -37,7 +37,6 @@
 ;       Converted from a procedure to a function, July 2007
 ;       Changed header.softwareID to reflect top level program, March 2008. John Armston.
 ;       Updated for LAS 1.2 format. 2010. John Armston.
-;       Update for LAS 1.3 format. Nov 2010. John Armston.
 ;
 ;###########################################################################
 ;
@@ -71,63 +70,36 @@
 ;
 ;###########################################################################
 
-function InitHeaderLAS, pointFormat=pointFormat, versionMinor=versionMinor
+function InitHeaderLAS, pointFormat=pointFormat
 
-  compile_opt idl2
-  if (n_elements(versionMinor) eq 0) then versionMinor = 2
-  if (n_elements(pointFormat) eq 0) then pointFormat = 3
-  
-  ; versionMinor specifics
-  case versionMinor of
-    0: begin
-      globalEncoding = 0US
-      headerSize = 227US
-      dataOffset = 227UL
-    end
-    1: begin
-      globalEncoding = 0US
-      headerSize = 227US
-      dataOffset = 227UL
-    end
-    2: begin
-      globalEncoding = 1US
-      headerSize = 227US
-      dataOffset = 227UL
-    end
-    3: begin
-      globalEncoding = 128US
-      headerSize = 235US
-      dataOffset = 235UL
-    end
-  endcase
-  
-  ; pointFormat specifics
+  compile_opt idl2;, logical_predicate
+  if not keyword_set(pointFormat) then pointFormat = 1
+  minorFormat = (pointFormat eq 3) ? 2 : pointFormat
   case pointFormat of
     0: pointLength = 20US
     1: pointLength = 28US
     2: pointLength = 26US
     3: pointLength = 34US
-    4: pointLength = 57US
-    5: pointLength = 63US
   endcase
   
   ; Define the public header structure
+  
   header = { $
     signature       : byte('LASF'), $               ; File signature
     fileSource      : 0US,  $                       ; File source ID
-    globalEncoding  : globalEncoding,  $            ; Global encoding
+    globalEncoding  : 0US,  $                       ; Global encoding
     guid1           : 0UL, $                        ; Project ID - GUID data 1
     guid2           : 0US,  $                       ; Project ID - GUID data 2
     guid3           : 0US,  $                       ; Project ID - GUID data 3
     guid4           : bytarr(8), $                  ; Project ID - GUID data 4
     versionMajor    : 1B, $                         ; Version major
-    versionMinor    : byte(versionMinor), $          ; Version minor
+    versionMinor    : byte(minorFormat), $          ; Version minor
     systemID        : bytarr(32), $                 ; System identifier
     softwareID      : bytarr(32), $                 ; Generating software
     day             : 0US,    $                     ; File creation day of year
     year            : 0US,    $                     ; File creation year
-    headerSize      : headerSize,  $                ; Header size
-    dataOffset      : dataOffset, $                 ; Offset to point data
+    headerSize      : 227US,  $                     ; Header size
+    dataOffset      : 227UL, $                      ; Offset to point data
     nRecords        : 0UL,   $                      ; Number of variable length records
     pointFormat     : byte(pointFormat),    $       ; Point data format ID
     pointLength     : pointLength,   $              ; Point data record length
@@ -147,14 +119,12 @@ function InitHeaderLAS, pointFormat=pointFormat, versionMinor=versionMinor
     zMin            : 0D  $                         ; Min Z
     }
     
-  ; Add waveform data packet record
-  if (pointFormat GT 3) then begin
-    header = create_struct(header, 'wdp', 0ULL)
-  endif
-  
   ; Set the software ID
   RSC_LAS_Tools_SysVar
   header.softwareID = byte(strjoin(['RSC LAS Tools', !QRSC_LIDAR_VERSION, ', IDL', !version.release], ' '))
+  
+  ; Set the GPS time global encoding
+  if (pointFormat eq 2) then header.globalEncoding = 1US
   
   ; Set the creation date
   date = bin_date(systime(/utc))

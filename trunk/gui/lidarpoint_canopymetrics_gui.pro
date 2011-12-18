@@ -90,8 +90,7 @@ PRO LidarPoint_CanopyMetrics_GUI
     'Height Percentile', $
     'Canopy Openness Index', $
     'Canopy Relief Ratio', $
-    'Plant Area Index Proxy', $
-    'Density Deciles']
+    'Plant Area Index Proxy']
     
   coverList = ['Count Ratio', $
     'Weighted Sum', $
@@ -137,7 +136,6 @@ PRO LidarPoint_CanopyMetrics_GUI
   Base3 = widget_base(tlb3, column=1, frame=1)
   cover_droplist = FSC_Droplist(Base3, Value=coverList, Index=0, title='Method : ')
   height_threshold = FSC_INPUTFIELD(Base3, Title='Fractional Cover > Height Threshold (m) : ', Value=0.5, /FloatValue, LabelAlign=1, decimal=2)
-  text = WIDGET_LABEL(Base3, value='Height threshold is also used as lower bound of Density Deciles', frame=0, /align_left)
   height_threshold_top = FSC_INPUTFIELD(Base3, Title='Fractional Cover <= Top Height Threshold (m) : ', Value=0.0, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base3, value=' Weights for "Weighted Sum" : ', frame=0, /align_left)
   weight_VegGnd = FSC_INPUTFIELD(Base3, Title=' First Returns Only : ', Value=0.50, /FloatValue, LabelAlign=1, decimal=2)
@@ -153,8 +151,7 @@ PRO LidarPoint_CanopyMetrics_GUI
   text4 = WIDGET_LABEL(tlb4, value='Height Percentile Product Settings', frame=0, /align_center)
   Base4 = widget_base(tlb4, column=1, frame=1)
   percentile_droplist = FSC_Droplist(Base4, Value=percentileList, Index=0, title='Method : ')
-  height_percentile = FSC_INPUTFIELD(Base4, Title='Height Percentile (0-1) : ', Value=0.95, /FloatValue, LabelAlign=1, decimal=2)
-  text = WIDGET_LABEL(Base4, value='Height percentile is also used as upper bound of Density Deciles', frame=0, /align_left)
+  height_percentile = FSC_INPUTFIELD(Base4, Title='Height Percentile (0-1) : ', Value=0.99, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base4, value='Settings for the Cover (Counts) method : ', frame=0, /align_left)
   vertical_binsize = FSC_INPUTFIELD(Base4, Title='Vertical Bin Size (m) : ', Value=0.15, /FloatValue, LabelAlign=1, decimal=2)
   

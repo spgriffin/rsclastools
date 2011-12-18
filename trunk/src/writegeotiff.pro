@@ -73,7 +73,7 @@
 ;
 ;###########################################################################
 
-PRO WRITEGEOTIFF, input, x0, y0, proj, output, cell_size=cell_size, assocInput=assocInput, ncols=ncols, nrows=nrows, nbands=nbands, zone=zone
+PRO WRITEGEOTIFF, input, x0, y0, proj, output, cell_size=cell_size, assocInput=assocInput, ncols=ncols, nrows=nrows
 
   ; Error handling
   catch, theError
@@ -86,13 +86,6 @@ PRO WRITEGEOTIFF, input, x0, y0, proj, output, cell_size=cell_size, assocInput=a
   
   ; Initialise variables
   if not keyword_set(cell_size) then cell_size = 1D
-  if keyword_set(zone) then begin
-    case proj of
-      'MGA94': proj = 28300L + zone
-      'BNG': proj = 27700L
-      'UTM': proj = 32700L + zone
-    endcase
-  endif
   
   ; Setup the geotiff structure
   geo = create_struct('MODELTIEPOINTTAG', [0D, 0D, 0D, x0, y0, 0D])
@@ -106,7 +99,7 @@ PRO WRITEGEOTIFF, input, x0, y0, proj, output, cell_size=cell_size, assocInput=a
     write_tiff, output, input, geotiff=geo, /float, description=filename
   endif else begin
     openr, lun, input, /get_lun
-    temp = assoc(lun, fltarr(ncols, nrows, nbands, /nozero))
+    temp = assoc(lun, fltarr(ncols, nrows, /nozero))
     write_tiff, output, temp[0], geotiff=geo, /float, description=output
     free_lun, lun
   endelse
