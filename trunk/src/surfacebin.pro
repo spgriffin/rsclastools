@@ -76,7 +76,7 @@
 FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, productOptions
 
   ; Keywords
-  forward_function filterReturns, hist_nd, ProfileStatistics, HeightCoverMetric, TerrainMetric
+  forward_function filterReturns, hist_nd, getStatistic, HeightCoverMetric, TerrainMetric
   
   ; Read the data
   tIndex = where(tileStruct.col EQ col_n AND tileStruct.row EQ row_n)
@@ -123,10 +123,10 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
     'Height': begin
       case string(header.systemID) of
         'Height: Source': begin
-          field = data.(8) * 0.01
+          field = data.source * 0.01
         end
         'Height: Elev': begin
-          field = data.(2) * header.zScale + header.zOffset
+          field = data.z * header.zScale + header.zOffset
         end
         else: begin
           errMsg = dialog_message('Point heights not calculated.', /error, title='TileBinSurface.pro')
@@ -134,51 +134,101 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
         end
       endcase
     end
-    'Elevation': field = data.(2) * header.zScale + header.zOffset
-    'Intensity': field = data.(3)
+    'Elevation': field = data.z * header.zScale + header.zOffset
+    'Intensity': field = data.inten
+    'Red': field = data.red
+    'Green': field = data.green
+    'Blue': field = data.blue
   endcase
   
   ; If the tile has the required data...
   if (count gt 0) then begin
   
     ; Contruct grid for binning, input is an NxP array representing P data points in N dimensions
-    v = transpose([[data[index].(0) * header.xScale + header.xOffset], [data[index].(1) * header.yScale + header.yOffset]])
-    surf = float(hist_nd(reform(v,2,count), resolution, reverse_indices=ri, /omit_upper, $
-      min=[tileStruct.xMin[tIndex[0]],tileStruct.yMin[tIndex[0]]], max=[tileStruct.xMax[tIndex[0]],tileStruct.yMax[tIndex[0]]]))
+    v = transpose([[data[index].x * header.xScale + header.xOffset], [data[index].y * header.yScale + header.yOffset]])
+    surf = hist_nd(reform(v,2,count), resolution, reverse_indices=ri, $
+      min=[tileStruct.xMin[tIndex[0]],tileStruct.yMin[tIndex[0]]], max=[tileStruct.xMax[tIndex[0]]-1e-6,tileStruct.yMax[tIndex[0]]-1e-6])
       
+    ; Initialise output raster
+    dims = size(surf, /dimensions)
+    case productType of
+      'Statistic': begin
+        surf = reform(float(surf), dims[0], dims[1], 1)
+      end
+      'Canopy Metric': begin
+        case productOptions.method of
+          'Density Deciles': begin
+            surf = fltarr(dims[0], dims[1], 10)
+          end
+          'Fractional Cover Profile': begin
+            nz = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
+            surf = fltarr(dims[0], dims[1], nz)
+          end
+          'Apparent Foliage Profile': begin
+            nz = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
+            surf = fltarr(dims[0], dims[1], nz)
+          end
+          else: surf = reform(float(surf), dims[0], dims[1], 1)
+        endcase
+      end
+      'Terrain Metric': begin
+        surf = reform(float(surf), dims[0], dims[1], 1)
+      end
+    endcase
+    
     ; Calculate metric
-    for i = 0L, n_elements(surf) - 1L, 1L do begin
+    nBins = dims[0] * dims[1]
+    for i = 0L, nBins - 1L, 1L do begin
+      idx = array_indices(dims, i, /dimensions)
       if (ri[i] NE ri[i+1L]) then begin
         case productType of
           'Statistic': begin
             area = float(resolution)^2
-            surf[i] = ProfileStatistics(field[index[ri[ri[i]:ri[i+1L]-1L]]], productOptions.method, null, area)
+            surf[idx[0],idx[1],*] = getStatistic(field[index[ri[ri[i]:ri[i+1L]-1L]]], productOptions.method, null, area, limits=productOptions.limits)
           end
           'Canopy Metric': begin
-            subfirst = filterReturns(data[index[ri[ri[i]:ri[i+1L]-1L]]], type=1, n=1)
-            sublast = filterReturns(data[index[ri[ri[i]:ri[i+1L]-1L]]], type=2)
-            subsingle = filterReturns(data[index[ri[ri[i]:ri[i+1L]-1L]]], type=7)
-            surf[i] = HeightCoverMetric(field[index[ri[ri[i]:ri[i+1L]-1L]]], intensity=data[index[ri[ri[i]:ri[i+1L]-1L]]].(3), $
+            subfirst = filterReturns(data[ri[ri[i]:ri[i+1L]-1L]], type=1, n=1)
+            sublast = filterReturns(data[ri[ri[i]:ri[i+1L]-1L]], type=2)
+            subsingle = filterReturns(data[ri[ri[i]:ri[i+1L]-1L]], type=7)
+            surf[idx[0],idx[1],*] = HeightCoverMetric(field[ri[ri[i]:ri[i+1L]-1L]], intensity=data[ri[ri[i]:ri[i+1L]-1L]].inten, $
               productOptions, first=subfirst, last=sublast, single=subsingle, null=null)
           end
           'Terrain Metric': begin
-            surf[i] = TerrainMetric(data[index[ri[ri[i]:ri[i+1L]-1L]]].(2) * header.zScale + header.zOffset, $
-              data[index[ri[ri[i]:ri[i+1L]-1L]]].(0) * header.xScale + header.xOffset, $
-              data[index[ri[ri[i]:ri[i+1L]-1L]]].(1) * header.yScale + header.yOffset, $
+            surf[idx[0],idx[1],*] = TerrainMetric(data[index[ri[ri[i]:ri[i+1L]-1L]]].z * header.zScale + header.zOffset, $
+              data[index[ri[ri[i]:ri[i+1L]-1L]]].x * header.xScale + header.xOffset, $
+              data[index[ri[ri[i]:ri[i+1L]-1L]]].y * header.yScale + header.yOffset, $
               productOptions.method, null)
           end
         endcase
       endif else begin
-        surf[i] = null
+        surf[idx[0],idx[1],*] = null
       endelse
     endfor
     
   endif else begin
   
     ; Create a null surface
-    xn = floor((tileStruct.xMax[tIndex[0]]-tileStruct.xMin[tIndex[0]]) / resolution)
-    yn = floor((tileStruct.yMax[tIndex[0]]-tileStruct.yMin[tIndex[0]]) / resolution)
-    surf = replicate(null,xn,yn)
+    nx = (tileStruct.xMax[tIndex[0]] - tileStruct.xMin[tIndex[0]]) / resolution
+    ny = (tileStruct.yMax[tIndex[0]] - tileStruct.yMin[tIndex[0]]) / resolution
+    case productType of
+      'Statistic': nz = 1
+      'Canopy Metric': begin
+        case productOptions.method of
+          'Density Deciles': begin
+            nz = 10
+          end
+          'Fractional Cover Profile': begin
+            nz = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
+          end
+          'Apparent Foliage Profile': begin
+            nz = ceil((ceil(productOptions.height_threshold_top)+productOptions.vbinsize) / productOptions.vbinsize) + 1
+          end
+          else: nz = 1
+        endcase
+      end
+      'Terrain Metric': nz = 1
+    endcase
+    surf = reform(replicate(null, nx, ny, nz), nx, ny, nz)
     
   endelse
   
@@ -186,6 +236,3 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
   return, surf
   
 END
-
-
-

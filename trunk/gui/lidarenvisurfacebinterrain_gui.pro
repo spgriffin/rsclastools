@@ -127,10 +127,10 @@ PRO LidarENVISurfaceBinTerrain_GUI
   file_bm = replicate(0B,16,16,3)
   for i = 0L, nFiles-1L, 1L do begin
     wtFile = WIDGET_TREE(wtRoot, VALUE=infile_bn[i], /FOLDER, /EXPANDED, BITMAP=file_bm)
-    wtLeaf = WIDGET_TREE(wtFile, VALUE='UL Easting : ' + strtrim(string(xMin[i],format='(f10.2)'),2))
-    wtLeaf = WIDGET_TREE(wtFile, VALUE='UL Northing : ' + strtrim(string(yMax[i],format='(f10.2)'),2))
-    wtLeaf = WIDGET_TREE(wtFile, VALUE='LR Easting : ' + strtrim(string(xMax[i],format='(f10.2)'),2))
-    wtLeaf = WIDGET_TREE(wtFile, VALUE='LR Northing : ' + strtrim(string(yMin[i],format='(f10.2)'),2))
+    wtLeaf = WIDGET_TREE(wtFile, VALUE='UL Easting : ' + strtrim(string(xMin[i],format='(f10.2)'),2), UVALUE='ChangeBounds')
+    wtLeaf = WIDGET_TREE(wtFile, VALUE='UL Northing : ' + strtrim(string(yMax[i],format='(f10.2)'),2), UVALUE='ChangeBounds')
+    wtLeaf = WIDGET_TREE(wtFile, VALUE='LR Easting : ' + strtrim(string(xMax[i],format='(f10.2)'),2), UVALUE='ChangeBounds')
+    wtLeaf = WIDGET_TREE(wtFile, VALUE='LR Northing : ' + strtrim(string(yMin[i],format='(f10.2)'),2), UVALUE='ChangeBounds')
   endfor
   text2 = WIDGET_LABEL(tlb, value='Product Settings', frame=0, /align_center)
   Base2 = widget_base(tlb, column=1, frame=1)
@@ -149,9 +149,8 @@ PRO LidarENVISurfaceBinTerrain_GUI
   hemi_droplist = FSC_Droplist(Base1, Value=hemiList, Index=0, title='UTM hemisphere : ')
   tilexsize = FSC_INPUTFIELD(Base1, Title='X tile size (m) : ', Value=100, /IntegerValue, /Positive, LabelAlign=1)
   tileysize = FSC_INPUTFIELD(Base1, Title='Y tile size (m) : ', Value=100, /IntegerValue, /Positive, LabelAlign=1)
-  text = WIDGET_LABEL(Base1, value='Output file format : ', frame=0, /align_left)
-  format_fields = ['ENVI', 'GeoTIFF']
-  formats = cw_bgroup(Base1, format_fields, column=2, /exclusive, set_value=0)
+  fields = ['Use system directory for temporary files']
+  tmpflag = cw_bgroup(Base1, fields, /nonexclusive, SET_VALUE=[1])
   
   Base3 = widget_base(tlb, column=1)
   text = WIDGET_LABEL(Base3, value='Information', frame=0, /align_center)
@@ -188,7 +187,7 @@ PRO LidarENVISurfaceBinTerrain_GUI
     productList:productList, $ ;Surface products
     returnList:returnList, $ ;Return type
     projList:projList, $ ; Projection types
-    formats:formats, $ ; File format
+    tmpflag:tmpflag, $ ; Temp file directory flag
     surfacetype:surfacetype} ; Single or separate surfaces
   XManager, 'RSC_LAS_Tools', tlb, /No_Block
   

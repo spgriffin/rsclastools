@@ -49,6 +49,7 @@
 ;
 ;    Written by John Armston, 2005.
 ;    Header and licence added for RSC LAS Tools, October 2010.
+;    Added start of waveform data packet record to header names. John Armston, Nov 2010. 
 ;
 ;-
 ;###########################################################################
@@ -131,6 +132,7 @@ PRO LidarLASinfo_GUI
       
       ; Read file header
       ReadHeaderLAS, infile[i], header
+      if (header.pointFormat GE 4) then names = [names, 'Start of waveform data packet record']
       
       ; Create leaves
       wtLeaf = lonarr(n_tags(header))

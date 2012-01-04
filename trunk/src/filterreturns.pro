@@ -90,7 +90,7 @@ FUNCTION filterReturns, data, type=type, n=n, limit=limit
       if not keyword_set(n) then n=1
       return_n = ishft(ishft(data.nreturn,5),-5)
       index = where(return_n EQ n, count)
-      result = bytarr(n_elements(data.(0)))
+      result = bytarr(n_elements(data.x))
       if (count GT 0L) then result[index] = 1
     end
     
@@ -98,44 +98,54 @@ FUNCTION filterReturns, data, type=type, n=n, limit=limit
       return_n = ishft(ishft(data.nreturn,5),-5)
       n_return = ishft(ishft(data.nreturn,2),-5)
       index = where((return_n EQ n_return) EQ 1, count)
-      result = bytarr(n_elements(data.(0)))
+      result = bytarr(n_elements(data.x))
       if (count GT 0L) then result[index] = 1
     end
     
     3: begin ; Unique returns
-      xMax = max(data.east,  min=xMin)
-      yMax = max(data.north, min=yMin)
-      zMin = min(data.elev)
+      xMax = max(data.x, min=xMin)
+      yMax = max(data.y, min=yMin)
+      zMin = min(data.z)
       eastRange  = ulong64(xMax - xMin)
       northRange = ulong64(yMax - yMin)
-      uniqCoords = eastRange * northRange * (data.elev  - zMin) $
-        + eastRange *              (data.north - yMin) $
-        +                          (data.east  - xMin)
+      uniqCoords = eastRange * northRange * (data.z  - zMin) $
+        + eastRange *              (data.y - yMin) $
+        +                          (data.x  - xMin)
       uniqCoords = uniq(bsort(uniqCoords))
-      result = bytarr(n_elements(data.(0)))
+      result = bytarr(n_elements(data.x))
       result[uniqCoords] = 1
     end
+    
+    ; For the class field, bits 1-4 are the acctual classification (32 possible values)
+    ; So the following should apply
+    ;   reads, '00100000', value, format='(B)' - For ground (2) returns
+    ;   reads, '00010000', value, format='(B)' - For unclassified (1) returns
+    ;   class = ishft(byte(value),-4)
+    ; But every LAS file I've ever received, I've had to apply the following
+    ;   reads, '00000001', value, format='(B)' - For ground (2) returns
+    ;   reads, '00000010', value, format='(B)' - For unclassified (1) returns
+    ;   class = ishft(ishft(byte(value),-4),4)
     
     4: begin ; Ground returns
       class = ishft(ishft(data.Class,4),-4)
       index = where(class eq 2, count)
-      result = bytarr(n_elements(data.(0)))
+      result = bytarr(n_elements(data.x))
       if (count GT 0L) then result[index] = 1
     end
     
     5: begin ; Non-ground returns
       class = ishft(ishft(data.Class,4),-4)
       index = where(data.Class ne 2, count)
-      result = bytarr(n_elements(data.(0)))
+      result = bytarr(n_elements(data.x))
       if (count GT 0L) then result[index] = 1
     end
     
     6: begin ; Duplicate returns (Duplicate returns can be unique)
       return_n = ishft(ishft(data.nreturn,5),-5)
       index = where(return_n GT 1, count)
-      result = bytarr(n_elements(data.(0)))
+      result = bytarr(n_elements(data.x))
       if (count GT 0) then begin
-        elev_diff = data[index].(2) - data[index-1L].(2)
+        elev_diff = data[index].z - data[index-1L].z
         idx = where(elev_diff LT limit, cnt)
         if (cnt GT 0) then result[index[idx]] = 1
       endif
@@ -144,7 +154,7 @@ FUNCTION filterReturns, data, type=type, n=n, limit=limit
     7: begin ; Singular returns
       n_return = ishft(ishft(data.nreturn,2),-5)
       index = where(n_return EQ 1, count)
-      result = bytarr(n_elements(data.(0)))
+      result = bytarr(n_elements(data.x))
       if (count GT 0L) then result[index] = 1
     end
     
@@ -153,7 +163,7 @@ FUNCTION filterReturns, data, type=type, n=n, limit=limit
       return_n = ishft(ishft(data.nreturn,5),-5)
       n_return = ishft(ishft(data.nreturn,2),-5)
       index = where((return_n EQ n) and (n_return GT 1), count)
-      result = bytarr(n_elements(data.(0)))
+      result = bytarr(n_elements(data.x))
       if (count GT 0L) then result[index] = 1
     end
     
@@ -161,11 +171,11 @@ FUNCTION filterReturns, data, type=type, n=n, limit=limit
       return_n = ishft(ishft(data.nreturn,5),-5)
       n_return = ishft(ishft(data.nreturn,2),-5)
       index = where(((return_n EQ n_return) EQ 1) and (n_return GT 1), count)
-      result = bytarr(n_elements(data.(0)))
+      result = bytarr(n_elements(data.x))
       if (count GT 0L) then result[index] = 1
     end
     
-    else: result = replicate(1L, n_elements(data.(0)))
+    else: result = replicate(1L, n_elements(data.x))
     
   endcase
   

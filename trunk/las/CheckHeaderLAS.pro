@@ -132,14 +132,13 @@ PRO CheckHeaderLAS, infile, splitsize=splitsize
     outputHeader.nPoints += nPoints
     nReturns = outputHeader.nReturns
     outputHeader.nReturns = histogram(ishft(ishft(outData.nreturn,5),-5), min=1, max=5, input=nReturns)
-    outputHeader.xMin = min(outData.(0)) * las_header.xScale + las_header.xOffset
-    outputHeader.xMax = max(outData.(0)) * las_header.xScale + las_header.xOffset
-    outputHeader.yMin = min(outData.(1)) * las_header.yScale + las_header.yOffset
-    outputHeader.yMax = max(outData.(1)) * las_header.yScale + las_header.yOffset
-    outputHeader.zMin = min(outData.(2)) * las_header.zScale + las_header.zOffset
-    outputHeader.zMax = max(outData.(2)) * las_header.zScale + las_header.zOffset
+    outputHeader.xMin = min(outData.x) * las_header.xScale + las_header.xOffset
+    outputHeader.xMax = max(outData.x) * las_header.xScale + las_header.xOffset
+    outputHeader.yMin = min(outData.y) * las_header.yScale + las_header.yOffset
+    outputHeader.yMax = max(outData.y) * las_header.yScale + las_header.yOffset
+    outputHeader.zMin = min(outData.z) * las_header.zScale + las_header.zOffset
+    outputHeader.zMax = max(outData.z) * las_header.zScale + las_header.zOffset
     outputHeader.pointLength = n_tags(outData, /data_length)
-    outputHeader.pointFormat = (outputHeader.pointLength EQ 20) ? 0 : 1
     if (total(outputHeader.nReturns) NE outputHeader.nPoints) then begin
       outputHeader.nReturns[0] += (outputHeader.nPoints - total(outputHeader.nReturns))
     endif
@@ -154,9 +153,16 @@ PRO CheckHeaderLAS, infile, splitsize=splitsize
     28: outputHeader.pointFormat = 1
     26: outputHeader.pointFormat = 2
     34: outputHeader.pointFormat = 3
+    57: outputHeader.pointFormat = 4
+    63: outputHeader.pointFormat = 5
   endcase
-  if outputHeader.dataOffset ne (fInfo.size - outputHeader.nPoints * outputHeader.pointLength) then begin
-    outputHeader.dataOffset = fInfo.size - outputHeader.nPoints * outputHeader.pointLength
+  if (outputHeader.pointFormat ge 4) then begin
+    eopData = (outputHeader.wdp gt 0) ? outputHeader.wdp : fInfo.size
+  endif else begin
+    eopData = fInfo.size
+  endelse
+  if outputHeader.dataOffset ne (eopData - outputHeader.nPoints * outputHeader.pointLength) then begin
+    outputHeader.dataOffset = eopData - outputHeader.nPoints * outputHeader.pointLength
   endif
   
   ; Write new header to the file
