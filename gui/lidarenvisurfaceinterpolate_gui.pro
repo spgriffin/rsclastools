@@ -104,7 +104,10 @@ PRO LidarENVISurfaceInterpolate_GUI
   ; Create list of products
   productList = ['Digital Elevation Model', $
     'Intensity Image', $
-    'Canopy Height Model']
+    'Canopy Height Model', $
+    'Classification', $
+    'Source ID', $
+    'Scan Angle Rank']
     
   ; Work out file bounds
   xMin = dblarr(nFiles)

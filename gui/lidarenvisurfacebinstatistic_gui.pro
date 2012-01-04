@@ -160,6 +160,9 @@ PRO LidarENVISurfaceBinStatistic_GUI
   product_droplist = FSC_Droplist(Base2, Value=productList, Index=0, title='Statistic product : ')
   return_droplist = FSC_Droplist(Base2, Value=returnList, Index=0, title='Return type : ')
   class_droplist = FSC_Droplist(Base2, Value=classList, Index=2, title='Return classification : ')
+  text = WIDGET_LABEL(Base2, value='Exclude following classes from non-ground returns : ', frame=0, /align_left)
+  fields = ['Water','Buildings']
+  excludeTable = cw_bgroup(Base2, fields, column=2, /nonexclusive)
   field_droplist = FSC_Droplist(Base2, Value=fieldList, Index=0, title='Data : ')
   minVal = FSC_INPUTFIELD(Base2, Title='Minimum value to consider : ', Value=-9999.0, /FloatValue, LabelAlign=1, decimal=2)
   maxVal = FSC_INPUTFIELD(Base2, Title='Maximum value to consider : ', Value=9999.0, /FloatValue, LabelAlign=1, decimal=2)
@@ -221,6 +224,7 @@ PRO LidarENVISurfaceBinStatistic_GUI
     fieldList:fieldList, $ ;Field type
     projList:projList, $ ; Projection types
     tmpflag:tmpflag, $ ; temp file flag
+    excludeTable:excludeTable, $ ; Classes to exclude
     surfacetype:surfacetype} ; Single or separate surfaces
   XManager, 'RSC_LAS_Tools', tlb, /No_Block
   

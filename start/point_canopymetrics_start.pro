@@ -103,10 +103,12 @@ PRO Point_CanopyMetrics_start, event
   endcase
   ReturnType = info.return_droplist->GetSelection()
   StatsType = 'Canopy'
+  Widget_Control, info.excludeTable, Get_Value=excludeTable
   Widget_Control, event.top, /Destroy
   LidarPoint, info.infile, ProductType, StatsType, $
     ReturnType, unit, height_threshold, weights, null, no_obs, height_percentile, rhovg_method, $
-    rhovg_percentile, constant, interval, max_height, metrictype, height_threshold_top=height_threshold_top, vbinsize=vbinsize
+    rhovg_percentile, constant, interval, max_height, metrictype, height_threshold_top=height_threshold_top, vbinsize=vbinsize, $
+    excludewater=excludeTable[0], excludebuildings=excludeTable[1]
     
   ; Make file directory cwd
   cd, file_dirname(info.infile[0])

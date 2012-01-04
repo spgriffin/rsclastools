@@ -1,12 +1,12 @@
 ;+
 ; NAME:
-;
+; 
 ;   HeightCoverMetric
-;
+; 
 ; PURPOSE:
-;
-;
-;
+; 
+; 
+; 
 ; AUTHOR:
 ;
 ;   John Armston
@@ -16,19 +16,19 @@
 ;   The University of Queensland
 ;   Brisbane QLD 4072, Australia
 ;   http://gpem.uq.edu.au/jrsrp
-;
+; 
 ; CATEGORY:
-;
-;
-;
+; 
+; 
+; 
 ; CALLING SEQUENCE:
-;
-;
-;
+; 
+; 
+; 
 ; INPUTS:
-;
-;
-;
+; 
+; 
+; 
 ; KEYWORDS:
 ;
 ;
@@ -73,7 +73,7 @@
 ;
 ;###########################################################################
 
-FUNCTION HeightCoverMetric, height, productOptions, first=first, last=last, single=single, intensity=intensity, null=null
+FUNCTION HeightCoverMetric, height, productOptions, first=first, last=last, single=single, exclude=exclude, intensity=intensity, null=null
 
   forward_function HeightProfile, GetPercentile
   
@@ -91,11 +91,17 @@ FUNCTION HeightCoverMetric, height, productOptions, first=first, last=last, sing
     'Last': index = where(last EQ 1, count)
     'Singular': index = where(single EQ 1, count)
     'All': begin
-      index = dindgen(no_obs)
-      count = no_obs
+      count = n_elements(height)
+      index = lindgen(count)
     end
     else: return, null
   endcase
+  
+  ; If there are classes to exclude, set them to zero height (treat them as ground)
+  ex_idx = where(exclude EQ 1, ex_cnt)
+  if (ex_cnt GT 0) then begin
+    height[ex_idx] = 0.0
+  endif
   
   ; Check for upper height threshold
   if (productOptions.height_threshold_top le 0.0) then begin

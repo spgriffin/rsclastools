@@ -131,6 +131,9 @@ PRO LidarPoint_ProfileStatistics_GUI
   null = FSC_INPUTFIELD(Base1, Title='"No Data" Value : ', Value=-1.0, /FloatValue, LabelAlign=1, decimal=2)
   
   return_droplist = FSC_Droplist(Base1, Value=returnList, Index=3, title='Return Type : ')
+  text = WIDGET_LABEL(Base1, value='Exclude following classes from non-ground returns : ', frame=0, /align_left)
+  fields = ['Water','Buildings']
+  excludeTable = cw_bgroup(Base1, fields, column=2, /nonexclusive)
   minVal = FSC_INPUTFIELD(Base1, Title='Maximum value to consider : ', Value=9999.0, /FloatValue, LabelAlign=1, decimal=2)
   maxVal = FSC_INPUTFIELD(Base1, Title='Minimum value to consider : ', Value=-9999.0, /FloatValue, LabelAlign=1, decimal=2)
   unit_droplist = FSC_Droplist(Base1, Value=unitList, Index=2, title='Variable : ')
@@ -162,6 +165,7 @@ PRO LidarPoint_ProfileStatistics_GUI
     unit_droplist:unit_droplist, $ ; unit
     infile:infile, $ ; filename/s
     statsList:statsList, $ ; Products
+    excludeTable:excludeTable, $ ; classes to exclude
     returnList:returnList} ; Return type
     
   XManager, 'RSC_LAS_Tools', tlb, /No_Block

@@ -113,6 +113,9 @@ PRO ENVISurfaceInterpRaster_start, event
     info.productList[0]: productType = 'Elevation'
     info.productList[1]: productType = 'Intensity'
     info.productList[2]: productType = 'Height'
+    info.productList[3]: productType = 'Classification'
+    info.productList[4]: productType = 'Source ID'
+    info.productList[5]: productType = 'Scan Angle Rank'
   endcase
   case info.proj_droplist->GetSelection() of
     info.projList[0]: proj = 'MGA94'

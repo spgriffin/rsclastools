@@ -158,6 +158,9 @@ PRO LidarENVISurfaceBinCanopy_GUI
   Base1 = widget_base(tlb1, column=1, frame=1)
   prod_droplist = FSC_Droplist(Base1, Value=productList, Index=0, title='Product Type : ')
   return_droplist = FSC_Droplist(Base1, Value=returnList, Index=0, title='Return Type : ')
+  text = WIDGET_LABEL(Base1, value='Exclude following classes from non-ground returns : ', frame=0, /align_left)
+  fields = ['Water','Buildings']
+  excludeTable = cw_bgroup(Base1, fields, column=2, /nonexclusive)
   max_height = FSC_INPUTFIELD(Base1, Title='Maximum Height Used (m) : ', Value=100.0, /FloatValue, LabelAlign=1, decimal=2, /positive)
   text = WIDGET_LABEL(Base1, value='Maximum Height Used also defines the maximum height of vertical profile products', frame=0, /align_left)
   resolution = FSC_INPUTFIELD(Base1, Title='Spatial resolution (m) : ', Value=5.0, /FloatValue, /Positive, LabelAlign=1, decimal=2)
@@ -178,9 +181,9 @@ PRO LidarENVISurfaceBinCanopy_GUI
   text3 = WIDGET_LABEL(tlb3, value='Lidar Index and Fractional Cover Product Settings', frame=0, /align_center)
   Base3 = widget_base(tlb3, column=1, frame=1)
   cover_droplist = FSC_Droplist(Base3, Value=coverList, Index=0, title='Method : ')
-  height_threshold = FSC_INPUTFIELD(Base3, Title='Fractional Cover > Height Threshold (m) : ', Value=0.5, /FloatValue, LabelAlign=1, decimal=2)
-  text = WIDGET_LABEL(Base3, value='Height thresold is also used as lower bound of Density Deciles', frame=0, /align_left)
-  height_threshold_top = FSC_INPUTFIELD(Base3, Title='Fractional Cover <= Top Height Threshold (m) : ', Value=50.0, /FloatValue, LabelAlign=1, decimal=2)
+  height_threshold = FSC_INPUTFIELD(Base3, Title='Lower (>) Height Threshold (m) : ', Value=0.5, /FloatValue, LabelAlign=1, decimal=2)
+  text = WIDGET_LABEL(Base3, value='Lower height thresold is also used as lower bound of Density Deciles', frame=0, /align_left)
+  height_threshold_top = FSC_INPUTFIELD(Base3, Title='Upper (<=) Height Threshold (m) : ', Value=50.0, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base3, value=' Weights for "Weighted Sum" : ', frame=0, /align_left)
   weight_VegGnd = FSC_INPUTFIELD(Base3, Title=' First Returns Only : ', Value=0.50, /FloatValue, LabelAlign=1, decimal=2)
   weight_Double = FSC_INPUTFIELD(Base3, Title=' First & Last Returns : ', Value=1.00, /FloatValue, LabelAlign=1, decimal=2)
@@ -264,6 +267,7 @@ PRO LidarENVISurfaceBinCanopy_GUI
     weight_Single:weight_Single, $ ; weight Single
     metrictype:metrictype, $ ; cover metric
     tmpflag:tmpflag, $ ; Temporary file flag
+    excludeTable:excludeTable, $ ; Classes to exclude
     surfacetype:surfacetype} ; Single or separate surfaces
   XManager, 'RSC_LAS_Tools', tlb, /No_Block
   

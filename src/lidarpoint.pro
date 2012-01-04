@@ -76,7 +76,8 @@
 PRO LidarPoint, infile, ProductType, StatsType, $
     ReturnType, unit, height_threshold, weights, null, no_obs, percentile, $
     rhovg_method, rhovg_percentile, constant, interval, max_height, metrictype, $
-    height_threshold_top=height_threshold_top, vbinsize=vbinsize, limits=limits
+    height_threshold_top=height_threshold_top, vbinsize=vbinsize, limits=limits, $
+    excludewater=excludewater, excludebuildings=excludebuildings
     
   forward_function getStatistic, filterReturns, CalibrateCover, CanopyMetric, TerrainMetric
   
@@ -158,42 +159,49 @@ PRO LidarPoint, infile, ProductType, StatsType, $
     first = filterReturns(data, type=1, n=1)
     single = filterReturns(data, type=7)
     last = filterReturns(data, type=2)
+    if (excludebuildings eq 1) then begin
+      exclude = filterReturns(data, type=10)
+    endif else begin
+      exclude = lonarr(header.nPoints)
+    endelse
+    if (excludewater eq 1) then begin
+      exclude = logical_or(filterReturns(data, type=11), exclude)
+    endif
     
     ; Index returns
     case returnType of
       'First': begin
-        index = where(first EQ 1, count)
+        index = where(logical_and(first EQ 1, exclude eq 0), count)
       end
       'Last': begin
-        index = where(last EQ 1, count)
+        index = where(logical_and(last EQ 1, exclude eq 0), count)
       end
       'Singular': begin
-        index = where(single EQ 1, count)
+        index = where(logical_and(single EQ 1, exclude eq 0), count)
       end
       'Ground': begin
         ground = filterReturns(data, type=4)
-        index = where(ground EQ 1, count)
+        index = where(logical_and(ground EQ 1, exclude eq 0), count)
       end
       'Non-ground (First)': begin
         non_ground = filterReturns(data, type=5)
         non_gnd_first = non_ground < first
-        index = where(non_gnd_first EQ 1, count)
+        index = where(logical_and(non_gnd_first EQ 1, exclude eq 0), count)
       end
       'Non-ground (All)': begin
         non_ground = filterReturns(data, type=5)
-        index = where(non_ground EQ 1, count)
+        index = where(logical_and(non_ground EQ 1, exclude eq 0), count)
       end
       'First (n>1)': begin
         first_ngt1 = filterReturns(data, type=8, n=1)
-        index = where(first_ngt1 EQ 1, count)
+        index = where(logical_and(first_ngt1 EQ 1, exclude eq 0), count)
       end
       'Last (n>1)': begin
         last_ngt1 = filterReturns(data, type=9)
-        index = where(last_ngt1 EQ 1, count)
+        index = where(logical_and(last_ngt1 EQ 1, exclude eq 0), count)
       end
       'All': begin
-        index = dindgen(header.nPoints)
-        count = header.nPoints
+        index = where(exclude eq 0, count)
       end
       else: return
     endcase
@@ -201,7 +209,7 @@ PRO LidarPoint, infile, ProductType, StatsType, $
     ; Derive statistic
     case statsType of
       'Canopy': begin
-        value = CanopyMetric(data, height, first, last, single, productType, returnType, height_threshold, $
+        value = CanopyMetric(data, height, first, last, single, exclude, productType, returnType, height_threshold, $
           weights, null, percentile, rhovg_method, rhovg_percentile, constant, interval, height_threshold_top=height_threshold_top, vbinsize=vbinsize)
       end
       'Terrain': begin
