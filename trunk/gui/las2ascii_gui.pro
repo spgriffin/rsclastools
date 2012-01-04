@@ -132,7 +132,7 @@ PRO LAS2Ascii_GUI
   Widget_Control, tlb, /Realize, Set_UValue={ $
     table:table, $ ; ; Field list widget ID
     infile:infile} ; filename/s
-  XManager, 'QRSC_LIDAR', tlb, /No_Block
+  XManager, 'RSC_LAS_Tools', tlb, /No_Block
   
 END
 

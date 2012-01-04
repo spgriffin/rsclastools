@@ -88,10 +88,12 @@ PRO Point_ProfileStatistics_start, event
     info.unitList[1]: unit = 3
     info.unitList[2]: unit = 0
   endcase
+  Widget_Control, info.excludeTable, Get_Value=excludeTable
   Widget_Control, event.top, /Destroy
   LidarPoint, info.infile, 'Statistics', StatsType, $
     ReturnType, unit, height_threshold, weights, null, no_obs, height_percentile, rhovg_method, $
-    rhovg_percentile, constant, interval, max_height, 0, limits=[minVal,maxVal]
+    rhovg_percentile, constant, interval, max_height, 0, limits=[minVal,maxVal], $
+    excludewater=excludeTable[0], excludebuildings=excludeTable[1]
     
   ; Make file directory cwd
   cd, file_dirname(info.infile[0])

@@ -130,15 +130,18 @@ PRO LidarPoint_CanopyMetrics_GUI
   prod_droplist = FSC_Droplist(Base1, Value=productList, Index=0, title='Product Type : ')
   null = FSC_INPUTFIELD(Base1, Title='"No Data" Value : ', Value=-1.0, /FloatValue, LabelAlign=1, decimal=2)
   return_droplist = FSC_Droplist(Base1, Value=returnList, Index=0, title='Return Type : ')
+  text = WIDGET_LABEL(Base1, value='Exclude following classes from non-ground returns : ', frame=0, /align_left)
+  fields = ['Water','Buildings']
+  excludeTable = cw_bgroup(Base1, fields, column=2, /nonexclusive)
   max_height = FSC_INPUTFIELD(Base1, Title='Maximum Height Used (m) : ', Value=100.0, /FloatValue, LabelAlign=1, decimal=2, /positive)
   
   tlb3 = widget_base(tlb, column=1, xsize=!QRSC_LIDAR_XSIZE)
   text3 = WIDGET_LABEL(tlb3, value='Lidar Index and Fractional Cover Product Settings', frame=0, /align_center)
   Base3 = widget_base(tlb3, column=1, frame=1)
   cover_droplist = FSC_Droplist(Base3, Value=coverList, Index=0, title='Method : ')
-  height_threshold = FSC_INPUTFIELD(Base3, Title='Fractional Cover > Height Threshold (m) : ', Value=0.5, /FloatValue, LabelAlign=1, decimal=2)
-  text = WIDGET_LABEL(Base3, value='Height threshold is also used as lower bound of Density Deciles', frame=0, /align_left)
-  height_threshold_top = FSC_INPUTFIELD(Base3, Title='Fractional Cover <= Top Height Threshold (m) : ', Value=0.0, /FloatValue, LabelAlign=1, decimal=2)
+  height_threshold = FSC_INPUTFIELD(Base3, Title='Lower (>) Height Threshold (m) : ', Value=0.5, /FloatValue, LabelAlign=1, decimal=2)
+  text = WIDGET_LABEL(Base3, value='Lower height threshold is also used as lower bound of Density Deciles', frame=0, /align_left)
+  height_threshold_top = FSC_INPUTFIELD(Base3, Title='Upper (<=) Height Threshold (m) : ', Value=0.0, /FloatValue, LabelAlign=1, decimal=2)
   text = WIDGET_LABEL(Base3, value=' Weights for "Weighted Sum" : ', frame=0, /align_left)
   weight_VegGnd = FSC_INPUTFIELD(Base3, Title=' First Returns Only : ', Value=0.50, /FloatValue, LabelAlign=1, decimal=2)
   weight_Double = FSC_INPUTFIELD(Base3, Title=' First & Last Returns : ', Value=0.75, /FloatValue, LabelAlign=1, decimal=2)
@@ -208,6 +211,7 @@ PRO LidarPoint_CanopyMetrics_GUI
     weight_VegGnd:weight_VegGnd, $ ; weight Veg/Gnd
     weight_Double:weight_Double, $ ; weight Double
     weight_Single:weight_Single, $ ; weight Single
+    excludeTable:excludeTable, $ ; classes to exclude
     metrictype:metrictype}; cover metric
   XManager, 'RSC_LAS_Tools', tlb, /No_Block
   

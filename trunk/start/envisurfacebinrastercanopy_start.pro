@@ -127,11 +127,12 @@ PRO ENVISurfaceBinRasterCanopy_start, event
   endcase
   returnType = info.return_droplist->GetSelection()
   StatsType = 'Canopy'
+  Widget_Control, info.excludeTable, Get_Value=excludeTable
   Widget_Control, event.top, /Destroy
   
   productOptions = {method:productType, height_threshold:height_threshold, weights:weights, percentile:height_percentile, rhovg_method:rhovg_method, $
     rhovg_percentile:rhovg_percentile, constant:constant, height_threshold_top:height_threshold_top, vbinsize:vbinsize, field:'Height', $
-    returnType:returnType, class:'All'}
+    returnType:returnType, class:'All', excludeWater:excludeTable[0], excludeBuildings:excludeTable[1]}
     
   TileBinSurface, info.infile, resolution=resolution, zone=zone, tilesize=[tilexsize,tileysize], null=null, hemisphere=hemisphere, $
     proj=proj, productType='Canopy Metric', separate=surfacetype, productOptions=productOptions, tmp=tmp

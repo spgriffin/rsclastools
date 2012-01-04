@@ -175,6 +175,20 @@ FUNCTION filterReturns, data, type=type, n=n, limit=limit
       if (count GT 0L) then result[index] = 1
     end
     
+    10: begin ; Building returns
+      class = ishft(ishft(data.Class,4),-4)
+      index = where(class eq 6, count)
+      result = bytarr(n_elements(data.x))
+      if (count GT 0L) then result[index] = 1
+    end
+    
+    11: begin ; Water returns
+      class = ishft(ishft(data.Class,4),-4)
+      index = where(class eq 9, count)
+      result = bytarr(n_elements(data.x))
+      if (count GT 0L) then result[index] = 1
+    end
+    
     else: result = replicate(1L, n_elements(data.x))
     
   endcase

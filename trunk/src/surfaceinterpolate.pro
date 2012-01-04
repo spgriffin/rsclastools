@@ -76,7 +76,7 @@
 FUNCTION SurfaceInterpolate, tileStruct, col_n, row_n, method, resolution, null, min_points, sectors, smoothing, productType
 
   ; Keywords
-  forward_function NNfix, filterReturns
+  forward_function filterReturns
   
   ; Read tiles
   nTiles = n_elements(tileStruct.name)
@@ -121,6 +121,36 @@ FUNCTION SurfaceInterpolate, tileStruct, col_n, row_n, method, resolution, null,
       myDelVar, all_data
       grid_input, easting, northing, zvalue, easting, northing, zvalue, epsilon=half_pixel, duplicates='Avg'
     end
+    'Classification': begin
+      first = filterReturns(all_data, type=1, n=1)
+      findex = where(first EQ 1, fcount)
+      if (fcount lt 6) then return, replicate(null,ncol,nrow)
+      easting = all_data[findex].x * header.xScale + header.xOffset
+      northing = all_data[findex].y * header.yScale + header.yOffset
+      zvalue = float(all_data[findex].class)
+      myDelVar, all_data
+      grid_input, easting, northing, zvalue, easting, northing, zvalue, epsilon=half_pixel, duplicates='First'
+    end
+    'Source ID': begin
+      first = filterReturns(all_data, type=1, n=1)
+      findex = where(first EQ 1, fcount)
+      if (fcount lt 6) then return, replicate(null,ncol,nrow)
+      easting = all_data[findex].x * header.xScale + header.xOffset
+      northing = all_data[findex].y * header.yScale + header.yOffset
+      zvalue = float(all_data[findex].source)
+      myDelVar, all_data
+      grid_input, easting, northing, zvalue, easting, northing, zvalue, epsilon=half_pixel, duplicates='Min'
+    end
+    'Scan Angle Rank': begin
+      first = filterReturns(all_data, type=1, n=1)
+      findex = where(first EQ 1, fcount)
+      if (fcount lt 6) then return, replicate(null,ncol,nrow)
+      easting = all_data[findex].x * header.xScale + header.xOffset
+      northing = all_data[findex].y * header.yScale + header.yOffset
+      zvalue = float(all_data[findex].angle)
+      myDelVar, all_data
+      grid_input, easting, northing, zvalue, easting, northing, zvalue, epsilon=half_pixel, duplicates='Avg'
+    end
     'Height': begin
       first = filterReturns(all_data, type=1, n=1)
       findex = where(first EQ 1, fcount)
@@ -156,7 +186,6 @@ FUNCTION SurfaceInterpolate, tileStruct, col_n, row_n, method, resolution, null,
     end
     'NaturalNeighbor': begin
       surf = griddata(easting, northing, zvalue, method=method, triangles=triangles, /grid, xout=xout, yout=yout, missing=null)
-      ;surf = NNfix(surf, resolution)
     end
     'PolynomialRegression': begin
       surf = griddata(easting, northing, zvalue, power=power, method=method, triangles=triangles, $

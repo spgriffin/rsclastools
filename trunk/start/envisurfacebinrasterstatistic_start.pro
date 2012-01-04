@@ -107,8 +107,9 @@ PRO ENVISurfaceBinRasterStatistic_start, event
     info.projList[1]: proj = 'BNG'
     info.projList[2]: proj = 'UTM'
   endcase
+  Widget_Control, info.excludeTable, Get_Value=excludeTable
   Widget_Control, event.top, /Destroy
-  productOptions = {method:productType,returnType:returnType,field:fieldType,class:classType,limits:[minVal,maxVal]}
+  productOptions = {method:productType,returnType:returnType,field:fieldType,class:classType,limits:[minVal,maxVal], excludeWater:excludeTable[0], excludeBuildings:excludeTable[1]}
   TileBinSurface, info.infile, resolution=resolution, zone=zone, tilesize=[tilexsize,tileysize], null=null, hemisphere=hemisphere, $
     proj=proj, productType='Statistic', separate=surfacetype, productOptions=productOptions,tmp=tmp
     

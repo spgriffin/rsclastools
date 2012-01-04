@@ -73,7 +73,7 @@
 ;
 ;###########################################################################
 
-FUNCTION CanopyMetric, data, height, first, last, single, productType, returnType, height_threshold, $
+FUNCTION CanopyMetric, data, height, first, last, single, exclude, productType, returnType, height_threshold, $
     weights, null, percentile, rhovg_method, rhovg_percentile, constant, interval, $
     height_threshold_top=height_threshold_top, vbinsize=vbinsize
     
@@ -93,11 +93,17 @@ FUNCTION CanopyMetric, data, height, first, last, single, productType, returnTyp
     'Last': index = where(last EQ 1, count)
     'Singular': index = where(single EQ 1, count)
     'All': begin
-      index = dindgen(no_obs)
-      count = no_obs
+      count = n_elements(height)
+      index = lindgen(count)
     end
     else: return, null
   endcase
+  
+  ; If there are classes to exclude, set them to zero height (treat them as ground)
+  ex_idx = where(exclude EQ 1, ex_cnt)
+  if (ex_cnt GT 0) then begin
+    height[ex_idx] = 0.0
+  endif
   
   ; Check for upper height threshold
   if (height_threshold_top le 0.0) then begin

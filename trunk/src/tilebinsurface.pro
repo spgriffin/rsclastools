@@ -145,8 +145,8 @@ PRO TileBinSurface, lasfiles, resolution=resolution, zone=zone, tilesize=tilesiz
     ; Tile
     progressBar -> SetProperty, Text="Tiling LAS data..."
     tileStruct = SurfaceTile(las_input, tileXsize=tilesize[0],tileYsize=tilesize[1],tmp=tmp,resolution=resolution,/progress)
-    ncols = (tileStruct.lrx - tileStruct.ulx) / resolution
-    nrows = (tileStruct.uly - tileStruct.lry) / resolution
+    ncols = ceil((tileStruct.lrx - tileStruct.ulx) / resolution)
+    nrows = ceil((tileStruct.uly - tileStruct.lry) / resolution)
     case productType of
       'Statistic': nbands = 1
       'Canopy Metric': begin
@@ -179,7 +179,7 @@ PRO TileBinSurface, lasfiles, resolution=resolution, zone=zone, tilesize=tilesiz
     ; Interpolate, stitch
     for row = 1L, tileStruct.nrows, 1L do begin
       index = where(tileStruct.row EQ (tileStruct.nrows-row+1L))
-      nlines = (tileStruct.yMax[index[0]] - tileStruct.yMin[index[0]]) / resolution
+      nlines = ceil((tileStruct.yMax[index[0]] - tileStruct.yMin[index[0]]) / resolution)
       temp = reform(replicate(null, ncols, nlines, nbands), ncols, nlines, nbands)
       for i = 0L, tileStruct.ncols-1L, 1L do begin
         if (tileStruct.empty[index[i]] EQ 0) then begin

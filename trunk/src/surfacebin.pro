@@ -90,6 +90,14 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
       end
       'Non-Ground': begin
         class = filterReturns(data, type=5)
+        if (productOptions.excludeBuildings eq 1) then begin
+          exclude = filterReturns(data, type=10)
+          class = logical_and(class, exclude eq 0)
+        endif
+        if (productOptions.excludeWater eq 1) then begin
+          exclude = filterReturns(data, type=11)
+          class = logical_and(class, exclude eq 0)
+        endif
       end
       'All': begin
         class = replicate(1, header.nPoints)
@@ -190,8 +198,16 @@ FUNCTION SurfaceBin, tileStruct, col_n, row_n, resolution, null, productType, pr
             subfirst = filterReturns(data[ri[ri[i]:ri[i+1L]-1L]], type=1, n=1)
             sublast = filterReturns(data[ri[ri[i]:ri[i+1L]-1L]], type=2)
             subsingle = filterReturns(data[ri[ri[i]:ri[i+1L]-1L]], type=7)
+            if (productOptions.excludeBuildings eq 1) then begin
+              subexclude = filterReturns(data[ri[ri[i]:ri[i+1L]-1L]], type=10)
+            endif else begin
+              subexclude = lonarr(n_elements(ri[ri[i]:ri[i+1L]-1L]))
+            endelse
+            if (productOptions.excludeWater eq 1) then begin
+              subexclude = logical_or(filterReturns(data[ri[ri[i]:ri[i+1L]-1L]], type=11), subexclude)
+            endif
             surf[idx[0],idx[1],*] = HeightCoverMetric(field[ri[ri[i]:ri[i+1L]-1L]], intensity=data[ri[ri[i]:ri[i+1L]-1L]].inten, $
-              productOptions, first=subfirst, last=sublast, single=subsingle, null=null)
+              productOptions, first=subfirst, last=sublast, single=subsingle, exclude=subexclude, null=null)
           end
           'Terrain Metric': begin
             surf[idx[0],idx[1],*] = TerrainMetric(data[index[ri[ri[i]:ri[i+1L]-1L]]].z * header.zScale + header.zOffset, $
