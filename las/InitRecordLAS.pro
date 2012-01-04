@@ -21,17 +21,18 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;       record = InitRecordLAS(NODATA=NODATA)
+;       record = InitRecordLAS(EVLR=EVLR,NODATA=NODATA)
 ;
 ; RETURN VALUE:
 ;
 ;       The function returns a structure corresponding to the variable length record of the .las
-;       file specification.  Set the NODATA keyword to return a structure that does not contain
-;       the data pointer.
+;       file specification. Set the NODATA keyword to return a structure that does not contain
+;       the data pointer. Set the EVLR keyword to return an extended variable length record.
 ;
 ; MODIFICATION HISTORY:
 ;
 ;       Written by David Streutker, July 2007.
+;       Added option to initialise an extended variable length record. John Armston, Nov 2010.
 ;
 ;###########################################################################
 ;
@@ -65,21 +66,30 @@
 ;
 ;###########################################################################
 
-function InitRecordLAS, noData = noData
+function InitRecordLAS, eVLR=eVLR, noData=noData
 
-  compile_opt idl2;, logical_predicate
+  compile_opt idl2
   
   ; Define the variable length header structure
-  
-  record = {formatR0,                                 $
-    signature       : 0US,                  $ ; Record signature
-    userID          : bytarr(16),           $ ; User ID
-    recordID        : 0US,                  $ ; Record ID
-    recordLength    : 0US,                  $ ; Record length after header
-    description     : bytarr(32)            $ ; Description
-    }
-    
-  if ~ keyword_set(noData) then record = {formatR1, inherits formatR0, data : ptr_new(/allocate)}    ; Data pointer
+  if keyword_set(eVLR) then begin
+    record = {formatR2,                       $
+      signature       : 0US,                  $ ; Record signature
+      userID          : bytarr(16),           $ ; User ID
+      recordID        : 0US,                  $ ; Record ID
+      recordLength    : 0ULL,                 $ ; Record length after header, 8 bytes
+      description     : bytarr(32)            $ ; Description
+      }
+      if ~ keyword_set(noData) then record = {formatR3, inherits formatR2, data : ptr_new(/allocate)}    ; Data pointer
+  endif else begin
+    record = {formatR0,                       $
+      signature       : 0US,                  $ ; Record signature
+      userID          : bytarr(16),           $ ; User ID
+      recordID        : 0US,                  $ ; Record ID
+      recordLength    : 0US,                  $ ; Record length after header, 2 bytes
+      description     : bytarr(32)            $ ; Description
+      }
+      if ~ keyword_set(noData) then record = {formatR1, inherits formatR0, data : ptr_new(/allocate)}    ; Data pointer
+  endelse
   
   return, record
   

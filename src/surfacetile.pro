@@ -73,8 +73,8 @@
 ;
 ;###########################################################################
 
-FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsize=splitsize, tmp=tmp, resolution=resolution
-
+FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsize=splitsize, tmp=tmp, resolution=resolution, progress=progress
+  
   ; Keywords
   forward_function InitDataLAS, GetMasterHeader
   if not keyword_set(splitsize) then splitsize = 1000000D
@@ -112,6 +112,38 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
   outputHeader.xMax = -10e6
   outputHeader.yMax = -10e6
   outputHeader.zMax = -10e6
+  outputHeader.nRecords = 0
+  case outputHeader.versionMinor of
+    0: begin
+      outputHeader.globalEncoding = 0US
+      outputHeader.headerSize = 227US
+      outputHeader.dataOffset = 227UL
+    end
+    1: begin
+      outputHeader.globalEncoding = 0US
+      outputHeader.headerSize = 227US
+      outputHeader.dataOffset = 227UL
+    end
+    2: begin
+      outputHeader.globalEncoding = 1US
+      outputHeader.headerSize = 227US
+      outputHeader.dataOffset = 227UL
+    end
+    3: begin
+      outputHeader.globalEncoding = 128US
+      outputHeader.headerSize = 235US
+      outputHeader.dataOffset = 235UL
+      outputHeader.wdp = 0LL
+    end
+  endcase
+  case outputHeader.pointFormat of
+    0: outputHeader.pointLength = 20US
+    1: outputHeader.pointLength = 28US
+    2: outputHeader.pointLength = 26US
+    3: outputHeader.pointLength = 34US
+    4: outputHeader.pointLength = 57US
+    5: outputHeader.pointLength = 63US
+  endcase
   date = bin_date(systime(/utc))
   day = julday(date[1],date[2],date[0]) - julday(1,1,date[0]) + 1
   outputHeader.softwareID = byte('IDL ' + !version.release)
@@ -129,11 +161,24 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
     tileRow[i] = dims[1] + 1
     WriteLAS, outputFiles[i], outputHeader, /nodata
   endfor
+
+  ; Start progress bar
+  if keyword_set(progress) then begin
+    progressBar=Obj_New('progressbar', Color='Forest Green', Text='Initialising...', title='Tiling LAS data...', /fast_loop)
+    progressBar->Start
+    btotal = double(n_elements(infiles))
+    bcount = 0D
+    progressbar -> Update, bcount
+  endif
   
   ; Loop through each las file
-  for k = 0L, n_elements(infiles)-1L, 1L do begin
+  nFiles = n_elements(infiles)
+  for k = 0L, nFiles-1L, 1L do begin
   
     ; Read input file
+    if keyword_set(progress) then begin
+      progressBar -> SetProperty, Text=strtrim(infiles[k])
+    endif
     assocLun = 1
     ReadLAS, infiles[k], las_header, las_data, assocLun=assocLun
     if (splitsize GT (las_header.nPoints + buffer)) then begin
@@ -150,7 +195,7 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
       upper = (lower + splitsize - 1UL) < (las_header.nPoints - 1UL)
       
       ; Read the chunk
-      nPoints = upper - lower + 1L
+      nPoints = upper - lower + 1UL
       p_index = lindgen(nPoints) + lower
       tempDataStr = InitDataLAS(pointFormat=las_header.pointFormat)
       tempData = replicate(tempDataStr, nPoints)
@@ -159,25 +204,35 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
       endfor
       
       ; Define which tile each return is in
-      tileCoord = ncol * (0L > floor(((tempData.(1) * las_header.yScale + las_header.yOffset) - floor(masterHeader.yMin)) / yDiv) < (nrow - 1L)) $
-        + (0L > floor(((tempData.(0) * las_header.xScale + las_header.xOffset) - floor(masterHeader.xMin)) / xDiv) < (ncol - 1L))
+      tileCoord = ncol * (0L > floor(((tempData.y * las_header.yScale + las_header.yOffset) - floor(masterHeader.yMin)) / yDiv) < (nrow - 1L)) $
+        + (0L > floor(((tempData.x * las_header.xScale + las_header.xOffset) - floor(masterHeader.xMin)) / xDiv) < (ncol - 1L))
       data_bin = histogram(tileCoord, min=0L, max=nTiles-1L, reverse_indices=ri)
+      
+      ; Make sure scaling and offsets are consistent for all tiles
+      if (nFiles GT 1) then begin
+        tempData.x = long(((tempData.x * las_header.xScale + las_header.xOffset) - outputHeader.xOffset) / outputHeader.xScale)
+        tempData.y = long(((tempData.y * las_header.yScale + las_header.yOffset) - outputHeader.yOffset) / outputHeader.yScale)
+        tempData.z = long(((tempData.z * las_header.zScale + las_header.zOffset) - outputHeader.zOffset) / outputHeader.zScale)
+      endif
+      
+      ; Define point origin in the USER field
+      tempData.user = k
       
       ; Write the returns to their correct tile
       for j = 0L, nTiles - 1L, 1L do begin
         if (ri[j] NE ri[j+1L]) then begin
+          ReadHeaderLas, outputFiles[j], temp_header
           openw, outputLun, outputFiles[j], /get_lun, /swap_if_big_endian, /append
           writeu, outputLun, tempData[ri[ri[j]:ri[j+1L]-1L]]
-          ReadHeaderLas, outputFiles[j], temp_header
           temp_header.nPoints += n_elements(ri[ri[j]:ri[j+1L]-1L])
           nReturns = temp_header.nReturns
           temp_header.nReturns = histogram(reform([ishft(ishft(tempData[ri[ri[j]:ri[j+1L]-1L]].nReturn, 5), -5)]), min=1, max=5, input=nReturns)
-          temp_header.xMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].east) * outputHeader.xScale + outputHeader.xOffset) > temp_header.xMax
-          temp_header.yMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].north) * outputHeader.yScale + outputHeader.yOffset) > temp_header.yMax
-          temp_header.zMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].elev) * outputHeader.zScale + outputHeader.zOffset) > temp_header.zMax
-          temp_header.xMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].east) * outputHeader.xScale + outputHeader.xOffset) < temp_header.xMax
-          temp_header.yMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].north) * outputHeader.yScale + outputHeader.yOffset) < temp_header.yMax
-          temp_header.zMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].elev) * outputHeader.zScale + outputHeader.zOffset) < temp_header.zMax
+          temp_header.xMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].x) * outputHeader.xScale + outputHeader.xOffset) > temp_header.xMax
+          temp_header.yMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].y) * outputHeader.yScale + outputHeader.yOffset) > temp_header.yMax
+          temp_header.zMax = (max(tempData[ri[ri[j]:ri[j+1L]-1L]].z) * outputHeader.zScale + outputHeader.zOffset) > temp_header.zMax
+          temp_header.xMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].x) * outputHeader.xScale + outputHeader.xOffset) < temp_header.xMin
+          temp_header.yMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].y) * outputHeader.yScale + outputHeader.yOffset) < temp_header.yMin
+          temp_header.zMin = (min(tempData[ri[ri[j]:ri[j+1L]-1L]].z) * outputHeader.zScale + outputHeader.zOffset) < temp_header.zMin
           point_lun, outputLun, 0
           writeu, outputLun, temp_header
           free_lun, outputLun
@@ -188,18 +243,33 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
     
     free_lun, assocLun
     
+    ; Update progress bar
+    if keyword_set(progress) then begin
+      bcount += 1D
+      if progressBar->CheckCancel() then begin
+        ok=Dialog_Message('LAS tiling cancelled')
+        progressBar->Destroy
+        retall
+      endif
+      progressbar->Update, bcount / btotal * 100.0
+    endif
+    
   endfor
   
   ; Generate file list
   for i = 0L, nTiles-1L, 1L do begin
     readHeaderlas, outputFiles[i], las_header
     finfo = file_info(outputFiles[i])
-    ;if (las_header.headerSize eq finfo.size) then begin
     if (las_header.nPoints eq 0) then begin
       tileEmpty[i] = 1
       file_delete, outputFiles[i], /quiet
     endif
   endfor
+  
+  ; Close progress bar
+  if keyword_set(progress) then begin
+    progressbar->Destroy
+  endif
   
   ; Return structure of necessary tile info
   return, create_struct('name', outputFiles, $
@@ -215,6 +285,14 @@ FUNCTION SurfaceTile, infiles, tileXsize=tileXsize,tileYsize=tileYsize, splitsiz
     'lrx', max(tilexmax), $
     'lry', min(tileymin), $
     'ncols', ncol, $
-    'nrows', nrow)
+    'nrows', nrow, $
+    'nTiles', nTiles, $
+    'xScale', outputHeader.xScale, $
+    'yScale', outputHeader.yScale, $
+    'zScale', outputHeader.zScale, $
+    'xOffset', outputHeader.xOffset, $
+    'yOffset', outputHeader.yOffset, $
+    'zOffset', outputHeader.zOffset $
+    )
     
 END

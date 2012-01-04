@@ -100,8 +100,14 @@ FUNCTION CanopyMetric, data, height, first, last, single, productType, returnTyp
   endcase
   
   ; Check for upper height threshold
-  if not keyword_set(height_threshold_top) then height_threshold_top = max(height)
-  if (height_threshold_top le height_threshold_top) then height_threshold_top = max(height)
+  if (height_threshold_top le 0.0) then begin
+    height_threshold_top_temp = max(height)
+  endif else begin
+    height_threshold_top_temp = height_threshold_top
+  endelse
+  if (height_threshold_top_temp le height_threshold) then begin
+    height_threshold_top_temp = max(height) > height_threshold
+  endif
   
   ; Derive metric
   case productType of
@@ -109,14 +115,14 @@ FUNCTION CanopyMetric, data, height, first, last, single, productType, returnTyp
       findex = where(first EQ 1, fcount)
       lindex = where(last EQ 1, lcount)
       sindex = where(single EQ 1, scount)
-      efe = (fcount GT 0) ? total((Height[findex] GT height_threshold) AND (Height[findex] LE height_threshold_top)) : 0.0
-      lfe = (lcount GT 0) ? total((Height[lindex] GT height_threshold) AND (Height[lindex] LE height_threshold_top)) : 0.0
-      sfe = (scount GT 0) ? total((Height[sindex] GT height_threshold) AND (Height[sindex] LE height_threshold_top)) : 0.0
-      fcover = (count GT 0) ? total((Height[index] GT height_threshold) AND (Height[index] LE height_threshold_top)) / float(count) : 0.0
+      efe = (fcount GT 0) ? total((Height[findex] GT height_threshold) AND (Height[findex] LE height_threshold_top_temp)) : 0.0
+      lfe = (lcount GT 0) ? total((Height[lindex] GT height_threshold) AND (Height[lindex] LE height_threshold_top_temp)) : 0.0
+      sfe = (scount GT 0) ? total((Height[sindex] GT height_threshold) AND (Height[sindex] LE height_threshold_top_temp)) : 0.0
+      fcover = (count GT 0) ? total((Height[index] GT height_threshold) AND (Height[index] LE height_threshold_top_temp)) / float(count) : 0.0
       metric = ((lfe + sfe) gt 0) ? ((efe / (lfe + sfe)) * fcover) : null
     end
     'Fractional Cover - Count Ratio': begin ; Count Fractional Cover
-      metric = (count GT 0) ? total((Height[index] GT height_threshold) AND (Height[index] LE height_threshold_top)) / float(count) : null
+      metric = (count GT 0) ? total((Height[index] GT height_threshold) AND (Height[index] LE height_threshold_top_temp)) / float(count) : null
     end
     'Fractional Cover - Weighted Sum': begin; Weighted Fractional Cover
       double_veg = total((height GT height_threshold) AND (last EQ 1) AND (single EQ 0))
@@ -132,7 +138,7 @@ FUNCTION CanopyMetric, data, height, first, last, single, productType, returnTyp
     end
     'Fractional Cover - Intensity Ratio': begin ; Intensity Fractional Cover
       if (count GT 0) then begin
-        iFC = HeightProfile(height[index], data[index].(3), first[index], null, interval, height_threshold, $
+        iFC = HeightProfile(height[index], data[index].inten, first[index], null, interval, height_threshold, $
           rhovg_method, rhovg_percentile, counts, locations, rhov_rhog, constant)
         if (n_elements(iFC) GT 1) then begin
           iFC = reverse(total(reverse(iFC), /cumulative))
@@ -179,14 +185,61 @@ FUNCTION CanopyMetric, data, height, first, last, single, productType, returnTyp
     end
     'Height Percentile - Intensity': begin ; Percentile height (intensity)
       if (count GT 0) then begin
-        metric = GetPercentile(height[index], percentile, intensity=data[index].(3), method='Intensity')
+        metric = GetPercentile(height[index], percentile, intensity=data[index].inten, method='Intensity')
       endif else begin
         metric = null
       endelse
     end
     'Height Percentile - Cover (Counts)': begin ; Percentile height (cover)
       if (count GT 0) then begin
-        metric = GetPercentile(height[index], percentile, intensity=data[index].(3), binsize=vbinsize, method='Cover (Counts)')
+        metric = GetPercentile(height[index], percentile, intensity=data[index].inten, binsize=vbinsize, method='Cover (Counts)')
+      endif else begin
+        metric = null
+      endelse
+    end
+    'Density Deciles': begin ; Density deciles (for Jackie et al.;maybe useful for biomass prediction)
+      if (count GT 0) then begin
+        upperHP = GetPercentile(height[index], percentile, method='Counts')
+        dBinCounts = histogram(height[index], max=upperHP, min=height_threshold, nbins=10, locations=locations)
+        metric = total(dBinsCounts, /cumulative) / float(total(dBinCounts))
+      endif else begin
+        metric = null
+      endelse
+    end
+    'Fractional Cover Profile': begin ; Vertical cover fraction profile (counts)
+      if (count GT 0) then begin
+        gnd_idx = where(height[index] le height_threshold, gnd_cnt, complement=veg_idx, ncomplement=veg_cnt)
+        if (gnd_cnt gt 0) then height[index[gnd_idx]] = 0.0
+        if (veg_cnt gt 0) then begin
+          vCounts = histogram(height[index[veg_idx]], binsize=vbinsize, locations=locations, $
+            min=0.0, max=ceil(height_threshold_top_temp))
+          metric = float(vCounts) / float(gnd_cnt+veg_cnt)
+        endif else begin
+          nz = ceil((ceil(height_threshold_top_temp)+vbinsize) / vbinsize)
+          metric = fltarr(nz)
+        endelse
+      endif else begin
+        metric = null
+      endelse
+    end
+    'Apparent Foliage Profile': begin ; Apparent foliage profile (counts)
+      if (count GT 0) then begin
+        gnd_idx = where(height[index] le height_threshold, gnd_cnt, complement=veg_idx, ncomplement=veg_cnt)
+        if (gnd_cnt gt 0) then height[index[gnd_idx]] = 0.0
+        if (veg_cnt gt 0) then begin
+          vCounts = histogram(height[index[veg_idx]], binsize=vbinsize, locations=locations, $
+            min=0.0, max=ceil(height_threshold_top_temp))
+          nz = n_elements(locations)
+          coverProfile = float(vCounts) / float(gnd_cnt+veg_cnt) ; Fractional cover profile
+          gapProfileCum = 1.0 - reverse(total(reverse(reform(coverProfile)), 0, /cumulative, /NAN)) ; cumulative GAP FRACTION (1 at top of canopy)
+          idx = where(gapProfileCum lt 1.0, cnt, complement=null_idx,ncomplement=null_count)
+          metric = fltarr(nz)
+          metric[1:nz-1] = (alog(gapProfileCum[1:nz-1]) - alog(gapProfileCum[0:nz-2])) / vbinsize ; apparent foliage profile
+          if (null_count gt 0) then metric[null_idx] = 0.0
+        endif else begin
+          nz = ceil((ceil(height_threshold_top_temp)+vbinsize) / vbinsize)
+          metric = fltarr(nz)
+        endelse
       endif else begin
         metric = null
       endelse

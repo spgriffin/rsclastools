@@ -74,7 +74,8 @@
 ;###########################################################################
 
 PRO BoundsShapefile_GUI
-
+  
+  compile_opt idl2
   FORWARD_FUNCTION FSC_Droplist, FSC_INPUTFIELD
   
   ; A LIDAR program.
@@ -95,7 +96,10 @@ PRO BoundsShapefile_GUI
   Base1 = widget_base(tlb, column=1, frame=1)
   text = WIDGET_LABEL(Base1, value='Format of output file/s:', frame=0, /align_left)
   fields = ['SHP','KML']
-  filetype = cw_bgroup(Base1, fields, column=1, /exclusive)
+  text = WIDGET_LABEL(Base1, value='Output shapefiles have area and z/y range as attributes.', frame=0, /align_left)
+  filetype = cw_bgroup(Base1, fields, column=1, /exclusive, set_value=0)
+  text = WIDGET_LABEL(Base1, value='This option avoids reading in all the point data:', frame=0, /align_left)
+  boundstype = cw_bgroup(Base1, 'Use extents from LAS header', /NONEXCLUSIVE, column=1, set_value=0)
   projList = ['MGA94','UTM WGS84','British National Grid','Geographic']
   inproj_droplist = FSC_Droplist(Base1, Value=projList, Index=0, title='Input LAS file projection : ')
   outproj_droplist = FSC_Droplist(Base1, Value=projList, Index=3, title='Output file projection : ')
@@ -103,10 +107,8 @@ PRO BoundsShapefile_GUI
   zone = FSC_INPUTFIELD(Base1, Title='MGA94/UTM zone : ', LabelSize=155, Value=55, /IntegerValue, /Positive, LabelAlign=1)
   hemiList = ['South','North']
   hemi_droplist = FSC_Droplist(Base1, Value=hemiList, Index=0, title='UTM WGS84 hemisphere : ')
-  hemisphere = FSC_INPUTFIELD(Base1, Title='UTM WGS84 hemisphere (MGA94/UTM) : ', LabelSize=155, Value=55, /IntegerValue, /Positive, LabelAlign=1)
-  text = WIDGET_LABEL(Base1, value='Output files are name <prefix>_extent.[shp/kml]', frame=0, /align_left)
+  text = WIDGET_LABEL(Base1, value='Output files are named <prefix>_extent.[shp/kml]', frame=0, /align_left)
   text = WIDGET_LABEL(Base1, value='where <prefix> is the input LAS filename', frame=0, /align_left)
-  
   ; Do the rest
   tlb2 = widget_base(tlb, column=1, xsize=!QRSC_LIDAR_XSIZE)
   button = Widget_Button(tlb2, Value='Create extent KML/SHP file', UValue='StartBoundsShapefile')
@@ -117,7 +119,8 @@ PRO BoundsShapefile_GUI
     zone:zone, $ ; UTM/MGA94 zone
     hemi_droplist:hemi_droplist, $ ; UTM hemisphere
     infile:infile, $ ; LAS file/s
-    filetype:filetype $ ; Output file type
+    filetype:filetype, $ ; Output file type
+    boundstype:boundstype $ ; whether to use the header extents or not
     }
   XManager, 'RSC_LAS_Tools', tlb, /No_Block
   

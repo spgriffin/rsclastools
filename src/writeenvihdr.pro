@@ -73,7 +73,7 @@
 ;
 ;###########################################################################
 
-PRO WriteENVIhdr, outfile, zone, resolution, xOrigin, yOrigin, ncol, nrow, proj, hemisphere, productType
+PRO WriteENVIhdr, outfile, zone, resolution, xOrigin, yOrigin, ncol, nrow, nbands, proj, hemisphere, productType
 
   openw, hlun, outfile + '.hdr', /get_lun
   central_meridian = zone * 6 - 183
@@ -82,14 +82,14 @@ PRO WriteENVIhdr, outfile, zone, resolution, xOrigin, yOrigin, ncol, nrow, proj,
   printf, hlun, 'description = {' + outfile + '}'
   printf, hlun, 'samples = ' + strtrim(ncol, 2)
   printf, hlun, 'lines   = ' + strtrim(nrow, 2)
-  printf, hlun, 'bands   = 1'
+  printf, hlun, 'bands   = ' + strtrim(nbands, 2)
   printf, hlun, 'header offset = 0'
   printf, hlun, 'file type = ENVI Standard'
   printf, hlun, 'data type = 4'
-  printf, hlun, 'interleave = bsq'
+  printf, hlun, 'interleave = bil'
   printf, hlun, 'byte order = 0'
   case proj of
-    0: begin
+    'MGA94': begin
       printf, hlun, 'map info = {Map Grid of Australia (MGA 94) Zone ' + strtrim(zone, 2) + ', 1, 1, ' + $
         strtrim(xOrigin, 2) + ', ' + strtrim(yOrigin, 2) + ', ' + strtrim(resolution, 2) + ', ' + strtrim(resolution, 2) + $
         ', ' + strtrim(zone, 2) + ', Geocentric Datum of Australia 1994, units=Meters}'
@@ -97,11 +97,11 @@ PRO WriteENVIhdr, outfile, zone, resolution, xOrigin, yOrigin, ncol, nrow, proj,
         ', 500000.0, 10000000.0, 0.999600, Geocentric Datum of Australia 1994, Map Grid of Australia (MGA 94) Zone ' + $
         strtrim(zone, 2) + ', units=Meters}'
     end
-    1: begin
+    'BNG': begin
       printf, hlun, 'United Kingdom, 1, 1, ' + strtrim(xOrigin, 2) + ', ' + strtrim(yOrigin, 2) + ', ' + strtrim(resolution, 2) + ', ' + strtrim(resolution, 2) + ', WGS-84, units=Meters}'
       printf, hlun, 'projection info = {3, 6377563.4, 6356256.9, 49.000000, -2.000000, 400000.0, -100000.0, 0.999601, WGS-84, United Kingdom, units=Meters}'
     end
-    2: begin
+    'UTM': begin
       printf, hlun, 'map info = {UTM, 1.000, 1.000, ' + strtrim(xOrigin, 2) + ', ' + strtrim(yOrigin, 2) + ', ' + strtrim(resolution, 2) + $
         ', ' + strtrim(resolution, 2) + ', ' + strtrim(zone, 2) + ', ' + strtrim(hemisphere, 2) + ', WGS-84, units=Meters}'
     end
