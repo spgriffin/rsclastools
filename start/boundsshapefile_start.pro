@@ -80,6 +80,7 @@ PRO BoundsShapefile_start, event
   in_proj = info.inproj_droplist->GetSelection()
   out_proj = info.outproj_droplist->GetSelection()
   zone = info.zone->Get_Value()
+  splitsize = info.splitsize->Get_Value()
   hemisphere = info.hemi_droplist->GetSelection()
   Widget_Control, info.filetype, Get_Value=filetype
   Widget_Control, info.boundstype, Get_Value=boundstype
@@ -88,16 +89,69 @@ PRO BoundsShapefile_start, event
   nFiles = n_elements(info.infile)
   for i = 0L, nFiles-1L, 1L do begin
     if (boundstype[0] eq 0) then begin
-      ReadLAS, info.infile[i], las_header, las_data
-      ConvexHull, las_data.x * las_header.xScale + las_header.xOffset, las_data.y * las_header.yScale + las_header.yOffset, px, py
+
+      ; Open LAS file
+      assocLun = 1
+      ReadLAS, info.infile[i], las_header, las_data, assocLun=assocLun
+      px = las_header.xMin
+      py = las_header.yMin
+      
+      ; Work out number of splits
+      if (splitsize GE las_header.nPoints) then begin
+        no_splits = 1
+      endif else begin
+        no_splits = ceil(las_header.nPoints / splitsize)
+      endelse
+      
+      ; Loop through each split
+      for j = 0L, no_splits - 1L, 1L do begin
+      
+        ; Determine split
+        case j of
+          0: begin
+            lower = 0L
+            upper = splitsize - 1L
+          end
+          no_splits-1L: begin
+            lower = j * splitsize
+            upper = las_header.nPoints - 1L
+          end
+          else: begin
+            lower = j * splitsize
+            upper = lower + splitsize
+          end
+        endcase
+        
+        ; Read the split
+        nPoints = upper - lower + 1L
+        sp_index = lindgen(nPoints) + lower
+        dataStr = InitDataLAS(pointFormat=las_header.pointFormat)
+        data = replicate(dataStr, nPoints)
+        for k = 0L, nPoints-1L do begin
+          data[k] = las_data[sp_index[k]]
+        endfor
+        
+        ; Get partial convex hull
+        x1 = [data.x * las_header.xScale + las_header.xOffset, px]
+        y1 = [data.y * las_header.yScale + las_header.yOffset, py]
+        ConvexHull, x1, y1, px, py
+        
+      endfor
+      
     endif else begin
+    
       ReadHeaderLAS, info.infile[i], las_header
       ConvexHull, [las_header.xMin,las_header.xMax,las_header.xMax,las_header.xMin], [las_header.yMax,las_header.yMax,las_header.yMin,las_header.yMin], px, py
+      
     endelse
+    
     fparts = strsplit(info.infile[i], '.', /extract)
     outfile = fparts[0] + '_extent'
     CreateBoundsShapefile, outfile, px, py, las_header.zMax, file_basename(info.infile[i]), kml=filetype, in_proj=in_proj, out_proj=out_proj, zone=zone, hemisphere=hemisphere
+    
   endfor
+  
+  ; Notify that we've finished
   if (filetype eq 1) then begin
     ok = dialog_message('Extent KML file/s created.', /information)
   endif else begin

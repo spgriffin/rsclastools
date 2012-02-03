@@ -75,8 +75,8 @@
 
 PRO RSC_LAS_Tools_SysVar
 
-  defsysv, '!QRSC_LIDAR_VERSION', '1.9.1', 1L
-  defsysv, '!QRSC_LIDAR_DATE', '2/12/2011', 1L
+  defsysv, '!QRSC_LIDAR_VERSION', '1.9.2', 1L
+  defsysv, '!QRSC_LIDAR_DATE', '3/2/2012', 1L
   defsysv, '!QRSC_LIDAR_XSIZE', '400', 1L
   
 END
