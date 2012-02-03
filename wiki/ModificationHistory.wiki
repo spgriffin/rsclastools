@@ -1,5 +1,10 @@
 = RSC LAS Tools Modification History =
 
+==Version 1.9.2 - 3/2/2012==
+  * Reading of LAS points now buffered for creation of extent SHP/KML files. Avoids memory issues. Buffer size now an input argument.
+  * KML file altitude now clamped to ground rather than relative to ground.
+  * Added Nick Goodwin as a contributor.
+
 ==Version 1.9.1 - 2/12/2011==
   * Fixed minor bug in calculation of fractional cover with buildings/water excluded
 
