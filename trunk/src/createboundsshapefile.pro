@@ -75,7 +75,7 @@
 ;###########################################################################
 
 PRO CreateBoundsShapefile, outfile, xcoords, ycoords, zcoord, name, kml=kml, in_proj=in_proj, out_proj=out_proj, zone=zone, hemisphere=hemisphere
-  
+
   compile_opt idl2
   forward_function ReprojectCoords
   
@@ -99,20 +99,18 @@ PRO CreateBoundsShapefile, outfile, xcoords, ycoords, zcoord, name, kml=kml, in_
     printf, lun, '<color>7dff0000</color>'
     printf, lun, '</PolyStyle>'
     printf, lun, '</Style>'
-    
-    ; Convert the coordinates to lat/long
-    lnglat = ReprojectCoords(xcoords, ycoords, in_proj, 'Geographic', zone=zone, hemisphere=hemisphere)
-    
     printf, lun, '<Placemark>'
     printf, lun, '<name>' + name + '</name>'
     printf, lun, '<styleUrl>#transBluePoly</styleUrl>'
     printf, lun, '<Polygon>'
     printf, lun, '<extrude>1</extrude>'
-    printf, lun, '<altitudeMode>relativeToGround</altitudeMode>'
+    printf, lun, '<altitudeMode>clampToGround</altitudeMode>'
     printf, lun, '<outerBoundaryIs>'
     printf, lun, '<LinearRing>'
     printf, lun, '<coordinates>'
     
+    ; Convert the coordinates to lat/long
+    lnglat = ReprojectCoords(xcoords, ycoords, in_proj, 'Geographic', zone=zone, hemisphere=hemisphere)
     for i = 0L, n_elements(xcoords)-1L, 1L do begin
       printf, lun, strjoin([strtrim(lnglat[0,i], 2),strtrim(lnglat[1,i], 2),zcoord], ',')
     endfor

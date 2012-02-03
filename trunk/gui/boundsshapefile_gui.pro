@@ -98,8 +98,10 @@ PRO BoundsShapefile_GUI
   fields = ['SHP','KML']
   text = WIDGET_LABEL(Base1, value='Output shapefiles have area and z/y range as attributes.', frame=0, /align_left)
   filetype = cw_bgroup(Base1, fields, column=1, /exclusive, set_value=0)
-  text = WIDGET_LABEL(Base1, value='This option avoids reading in all the point data:', frame=0, /align_left)
+  text = WIDGET_LABEL(Base1, value='This option avoids reading in all the LAS point data:', frame=0, /align_left)
   boundstype = cw_bgroup(Base1, 'Use extents from LAS header', /NONEXCLUSIVE, column=1, set_value=0)
+  text = WIDGET_LABEL(Base1, value='This value determines how many LAS points to read into memory at once:', frame=0, /align_left)
+  splitsize = FSC_INPUTFIELD(Base1, Title='Size of LAS point buffer : ', LabelSize=155, Value=1000000, /IntegerValue, /Positive, LabelAlign=1)
   projList = ['MGA94','UTM WGS84','British National Grid','Geographic']
   inproj_droplist = FSC_Droplist(Base1, Value=projList, Index=0, title='Input LAS file projection : ')
   outproj_droplist = FSC_Droplist(Base1, Value=projList, Index=3, title='Output file projection : ')
@@ -120,7 +122,8 @@ PRO BoundsShapefile_GUI
     hemi_droplist:hemi_droplist, $ ; UTM hemisphere
     infile:infile, $ ; LAS file/s
     filetype:filetype, $ ; Output file type
-    boundstype:boundstype $ ; whether to use the header extents or not
+    boundstype:boundstype, $ ; whether to use the header extents or not
+    splitsize:splitsize $ ; size of las data segments to read
     }
   XManager, 'RSC_LAS_Tools', tlb, /No_Block
   
