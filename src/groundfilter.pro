@@ -76,7 +76,7 @@
 FUNCTION GroundFilter,easting,northing,elevation,b_start=b_start,bmax=bmax,dh0=dh0,slope=slope,cell_size=cell_size,height_threshold=height_threshold
 
   ; Set defaults if parameters not provided
-  forward_function hist_nd;, hist2d_rilidar
+  forward_function hist_nd
   if not keyword_set(b_start) then b_start=1.0
   if not keyword_set(bmax) then bmax=7.0
   if not keyword_set(dh0) then dh0=0.5

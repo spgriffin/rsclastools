@@ -134,17 +134,17 @@ FUNCTION PointInterpolateHeight, tileStruct, col_n, row_n, method, null, min_poi
       'NearestNeighbor': begin
         outData = griddata(easting, northing, $
           zdata, method=method, triangles=triangles, missing=null, $
-          xout=all_data[vindex].x * header.xScale + header.xOffset, yout=all_data[veg_idx].y * header.yScale + header.yOffset)
+          xout=all_data[vindex].x * header.xScale + header.xOffset, yout=all_data[vindex].y * header.yScale + header.yOffset)
       end
       'Linear': begin
         outData = griddata(easting, northing, $
           zdata, method=method, triangles=triangles, missing=null, $
-          xout=all_data[vindex].x * header.xScale + header.xOffset, yout=all_data[veg_idx].y * header.yScale + header.yOffset)
+          xout=all_data[vindex].x * header.xScale + header.xOffset, yout=all_data[vindex].y * header.yScale + header.yOffset)
       end
       'InverseDistance': begin
         outData = griddata(easting, northing, $
           zdata, power=power, method=method, triangles=triangles, min_points=min_points, missing=null, sectors=sectors, empty_sectors=1, $
-          xout=all_data[vindex].x * header.xScale + header.xOffset, yout=all_data[veg_idx].y * header.yScale + header.yOffset, smoothing=smoothing)
+          xout=all_data[vindex].x * header.xScale + header.xOffset, yout=all_data[vindex].y * header.yScale + header.yOffset, smoothing=smoothing)
       end
       'NaturalNeighbor': begin
         outData = griddata(easting, northing, $
