@@ -123,6 +123,7 @@ PRO CreateBoundsShapefile, outfile, xcoords, ycoords, zcoord, name, kml=kml, in_
     printf, lun, '</Document>'
     printf, lun, '</kml>'
     close, lun
+    free_lun, lun
     
   endif else begin
   
