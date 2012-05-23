@@ -138,6 +138,9 @@ PRO BoundsShapefile_start, event
         
       endfor
       
+      ; Close assoc las file
+      free_lun, assocLun
+      
     endif else begin
     
       ReadHeaderLAS, info.infile[i], las_header

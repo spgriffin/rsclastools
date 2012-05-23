@@ -122,7 +122,7 @@ PRO CreateBoundsShapefile, outfile, xcoords, ycoords, zcoord, name, kml=kml, in_
     printf, lun, '</Placemark>'
     printf, lun, '</Document>'
     printf, lun, '</kml>'
-    free_lun, lun
+    close, lun
     
   endif else begin
   
@@ -176,6 +176,7 @@ PRO CreateBoundsShapefile, outfile, xcoords, ycoords, zcoord, name, kml=kml, in_
     
     ;Close the shapefile
     mynewshape->IDLffShape::DestroyEntity, entNew
+    mynewshape->Close
     obj_destroy, mynewshape
     ptr_free, p_vertices
     
